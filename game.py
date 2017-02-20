@@ -1,4 +1,4 @@
-import random, tkinter
+
 from random import randint
 
 def AI():
