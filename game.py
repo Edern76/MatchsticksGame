@@ -1,6 +1,8 @@
 
 from random import randint
 
+matches_num = 21
+
 def AI():
     global matches_num
     end = False
@@ -40,9 +42,8 @@ def player():
             break
     print('matches left: ' + str(matches_num))
 
-def main():
-    global matches_num, mode
-    mode = 3
+def main(mode = 3):
+    global matches_num
     while not mode in [0, 1]:
         mode = int(input('Against player (1) or computer (0) '))
     matches_num = 21 #int(input('how many matches? '))
