@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 
-import game, os, sys
+import os, sys
 from tkinter import *
 
 
@@ -40,8 +40,8 @@ logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la fr
 
 ############Création du menu###############
 menuFrame = Frame(root) #On crée une frame contenant les éléments du menu
-bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = lambda : game.main(0))
-bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = lambda : game.main(1))
+bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = lambda : os.system("python game.py 0"))
+bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = lambda : os.system("python game.py 1"))
 bouton1.pack()
 bouton2.pack()
 menuFrame.grid(row = 4, column = 1) #On place cette frame dans la colonne centrale et quelques lignes en dessous de la frame précédente

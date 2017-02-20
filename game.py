@@ -1,4 +1,4 @@
-
+import os, sys
 from random import randint
 
 matches_num = 21
@@ -44,8 +44,10 @@ def player():
 
 def main(mode = 3):
     global matches_num
-    while not mode in [0, 1]:
-        mode = int(input('Against player (1) or computer (0) '))
+    if not mode in [0, 1]:
+        while not mode in [0, 1]:
+            print(mode)
+            mode = int(input('Against player (1) or computer (0) '))
     matches_num = 21 #int(input('how many matches? '))
     print('Starting matches number: ' + str(matches_num))
     if not mode:
@@ -72,4 +74,5 @@ def main(mode = 3):
                 break
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv
+    main(int(args[1]))
