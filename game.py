@@ -70,4 +70,5 @@ def main():
                 print('player 2 loses')
                 break
 
-main()
+if __name__ == "__main__":
+    main()
