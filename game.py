@@ -5,16 +5,33 @@ from utils import curDir, assetsDir, imageDir
 
 matches_num = 21
 playing = False
-
+chosen = 0
+lock = threading.Lock()
 """
 class Controller:
     def __init__(self):
         self.playing = False
         self.chosen = None
 """        
+
+def chooseNumber(self, number):
+        global playing, chosen
+        with lock:
+            chosen = number
+            playing = False
+        
+        print('Chosen')
     
-        
-        
+def choose1(self):
+    self.chooseNumber(1)
+
+def choose2(self):
+    self.chooseNumber(2)
+    
+def choose3(self):
+    self.chooseNumber(3)
+
+
 # controller = Controller()
 
 class GUI(threading.Thread):
@@ -26,17 +43,7 @@ class GUI(threading.Thread):
         
     def exit(self):
         os._exit(1)
-    
-    def chooseNumber(self, number):
-        global playing
-        lock = threading.Lock()
-        lock.acquire()
-        self.chosen = number
-        self.playing = False
-        playing = False
-        lock.release()
-        print('Chosen')
-        
+
     def run(self):
         global controller
         self.base = Tk()
@@ -67,9 +74,9 @@ class GUI(threading.Thread):
         self.imageCanvas.place(width = 640, height = 400)
         
         self.buttonFrame = Frame(self.subFrame3)
-        self.button1 = Button(self.buttonFrame, text = "1", width = 5, command = lambda : self.chooseNumber(1))
-        self.button2 = Button(self.buttonFrame, text = "2", width = 5, command = lambda : self.chooseNumber(2))
-        self.button3 = Button(self.buttonFrame, text = "3", width = 5, command = lambda : self.chooseNumber(3))
+        self.button1 = Button(self.buttonFrame, text = "1", width = 5, command = choose1)
+        self.button2 = Button(self.buttonFrame, text = "2", width = 5, command = choose2)
+        self.button3 = Button(self.buttonFrame, text = "3", width = 5, command = choose3)
         self.matchButtons = [self.button1, self.button2, self.button3]
         for loop in self.matchButtons:
             loop.pack(side = LEFT, padx = 10)
@@ -122,27 +129,41 @@ class GameHandler:
     
     def player(self):
         def inputNumber():
-            global playing
-            controller = gui
-            if self.current_matches >= 1:
-                gui.button1.config(state = NORMAL)
-            if self.current_matches >= 2:
-                gui.button2.config(state = NORMAL)
-            if self.current_matches >= 3:
-                gui.button3.config(state = NORMAL)
-            controller.playing = True
-            playing = True
-            while True:
-                if (not controller.playing) or controller.chosen is not None or not playing:
+            global playing, chosen
+            valid = False
+            while not valid:
+                controller = gui
+                if self.current_matches >= 1:
+                    gui.button1.config(state = NORMAL)
+                if self.current_matches >= 2:
+                    gui.button2.config(state = NORMAL)
+                if self.current_matches >= 3:
+                    gui.button3.config(state = NORMAL)
+                #controller.playing = True
+                playing = True
+                while True:
+                    #with lock:
+                    mustContinue = playing and (chosen == 0)  #(not controller.playing) or
+                    if mustContinue:
+                        print('wtf')
+                    else:
+                        #print(controller.playing)
+                        print(playing)
+                        print(mustContinue)
+                        print(chosen)
+                        break
+                print('Loop ended')
+                for i in gui.matchButtons:
+                    i.config(state = DISABLED)
+                
+                chosenNum = int(chosen)
+                print(chosen)
+                print(chosenNum)
+                if chosenNum != 0:
+                    valid = True
                     break
-                else:
-                    print('Playing')
-                continue
-            for i in gui.matchButtons:
-                i.config(state = DISABLED)
-            chosen = int(controller.chosen)
-            controller.chosen = None
-            return controller.chosen
+            chosen = 0    
+            return chosenNum
         
         status = 'fail'
         while status != 'done':
