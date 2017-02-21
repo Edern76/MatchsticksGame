@@ -1,21 +1,101 @@
-import utils, threading
+import threading, time, os
 from random import randint
 from tkinter import *
-
-
+from utils import curDir, assetsDir, imageDir
 
 matches_num = 21
+playing = False
 
+"""
+class Controller:
+    def __init__(self):
+        self.playing = False
+        self.chosen = None
+"""        
+    
+        
+        
+# controller = Controller()
 
 class GUI(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self.textField = None
+        self.chosen = None
+        self.playing = False
+        
+    def exit(self):
+        os._exit(1)
+    
+    def chooseNumber(self, number):
+        global playing
+        lock = threading.Lock()
+        lock.acquire()
+        self.chosen = number
+        self.playing = False
+        playing = False
+        lock.release()
+        print('Chosen')
         
     def run(self):
+        global controller
         self.base = Tk()
+        self.base.geometry('1280x720+0+0')
+        self.window = PanedWindow(self.base, orient = HORIZONTAL)
+        self.window.pack(side = TOP, expand = Y, fill = BOTH)
+        self.frame1 = Frame(self.window, width = 300, height = 720)
+        self.frame2 = Frame(self.window, width = 640, height = 720)
+        self.frame3 = Frame(self.window, width = 340, height = 720)
+        self.frame1.grid_propagate(False)
+        self.frame1.pack_propagate(False)
+        self.textField = Text(self.frame1)
+        self.textField.pack(expand = Y, fill = BOTH)
+        self.textField.config(state = DISABLED)
         
+        self.window.add(self.frame1)
+        self.window.add(self.frame2)
+        
+        self.subWindow = PanedWindow(self.frame2, orient = VERTICAL)
+        self.subWindow.pack(side = TOP, expand = Y, fill = BOTH)
+        self.subFrame1 = Frame(self.subWindow, width = 640, height = 150)
+        self.subFrame2 = Frame(self.subWindow, width = 640, height = 400)
+        self.subFrame3 = Frame(self.subWindow, width = 640, height = 210)
+        
+        self.photo = PhotoImage(file = os.path.join(imageDir, 'playfield.png'))
+        self.imageCanvas = Canvas(self.subFrame2, width = 640, height = 400)
+        self.imageCanvas.create_image(0, 0, anchor = NW, image = self.photo)
+        self.imageCanvas.place(width = 640, height = 400)
+        
+        self.buttonFrame = Frame(self.subFrame3)
+        self.button1 = Button(self.buttonFrame, text = "1", width = 5, command = lambda : self.chooseNumber(1))
+        self.button2 = Button(self.buttonFrame, text = "2", width = 5, command = lambda : self.chooseNumber(2))
+        self.button3 = Button(self.buttonFrame, text = "3", width = 5, command = lambda : self.chooseNumber(3))
+        self.matchButtons = [self.button1, self.button2, self.button3]
+        for loop in self.matchButtons:
+            loop.pack(side = LEFT, padx = 10)
+            loop.config(state = DISABLED)
+        self.buttonFrame.pack(side = TOP, padx = 20, pady = 70)    
+        
+        self.subWindow.add(self.subFrame1)
+        self.subWindow.add(self.subFrame2)
+        self.subWindow.add(self.subFrame3)
+        self.subWindow.pack()
+                
+        self.window.add(self.frame3)
+        self.window.pack()
+        
+        self.base.protocol("WM_DELETE_WINDOW", self.exit)
         self.base.mainloop()
- 
+
+        raise SystemExit
+gui = GUI()
+
+def writeToField(message):
+    convMessage = message + '\n'
+    gui.textField.config(state = NORMAL)
+    gui.textField.insert('end', convMessage)
+    gui.textField.config(state = DISABLED)
+
 class GameHandler:
     def __init__(self, starting_num = 21, starting_player = 'Player 1'): 
         self.current_matches = starting_num
@@ -28,27 +108,47 @@ class GameHandler:
                 raise ValueError("Attempting to take an invalid number of matches ({})".format(number))
             else:
                 self.current_matches -= number
-                print(self.current_player.capitalize(), 'took', str(number), "matches.")
+                writeToField(self.current_player.capitalize() + ' took '+ str(number) + " matches.")
                 return 'done'
         except ValueError:
             return 'fail'
         
     def checkWin(self):
         if self.current_matches <= 0:
-            print(self.current_player, "wins !")
+            writeToField(self.current_player + " wins !")
             return 'win'
         else:
             return 'continue'
     
     def player(self):
         def inputNumber():
-            num = int(input('How many ?'))
-            return num
+            global playing
+            controller = gui
+            if self.current_matches >= 1:
+                gui.button1.config(state = NORMAL)
+            if self.current_matches >= 2:
+                gui.button2.config(state = NORMAL)
+            if self.current_matches >= 3:
+                gui.button3.config(state = NORMAL)
+            controller.playing = True
+            playing = True
+            while True:
+                if (not controller.playing) or controller.chosen is not None or not playing:
+                    break
+                else:
+                    print('Playing')
+                continue
+            for i in gui.matchButtons:
+                i.config(state = DISABLED)
+            chosen = int(controller.chosen)
+            controller.chosen = None
+            return controller.chosen
         
         status = 'fail'
         while status != 'done':
             num = inputNumber()
             status = self.takeMatches(num)
+            
     
     class AIComponent:
         def __init__(self, owner):
@@ -62,19 +162,19 @@ class GameHandler:
             removeMatch = mainClass.takeMatches
             if matches_num == 4*n:
                 removeMatch(3)
-                #print('AI took 3 matches')
+                #writeToField('AI took 3 matches')
             elif matches_num == 4*n + 3:
                 removeMatch(2)
-                #print('AI took 2 matches')
+                #writeToField('AI took 2 matches')
             elif matches_num == 4*n + 2:
                 removeMatch(1)
-                #print('AI took 1 match')
+                #writeToField('AI took 1 match')
             else:
                 num = randint(1, 3)
                 if matches_num - num < 0:
                     num = matches_num
                 removeMatch(num)    
-                #print('AI took ' + str(num) + ' match(es)')
+                #writeToField('AI took ' + str(num) + ' match(es)')
             n += 1
     
     def play(self, mode):
@@ -85,8 +185,8 @@ class GameHandler:
         player = self.player
         AI = self.AI.takeTurn
         while not self.checkWin() == 'win':
-            print(self.current_player + "'s turn.")
-            print('Current matches :', self.current_matches)
+            writeToField(self.current_player + "'s turn.")
+            writeToField('Current matches : ' + str(self.current_matches))
             if not mode:
                 if self.current_player == 'Player 1':
                     player()
@@ -106,8 +206,8 @@ class GameHandler:
 
 def main(mode = 3):
     game = GameHandler()
-    gui = GUI()
     gui.start()
+    time.sleep(2)
     global matches_num
     matches_num = game.current_matches
     if not mode in [0, 1]:
