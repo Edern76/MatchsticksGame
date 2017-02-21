@@ -1,8 +1,20 @@
-import os, sys
+import utils, threading
 from random import randint
+from tkinter import *
+
 
 
 matches_num = 21
+
+
+class GUI(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        
+    def run(self):
+        self.base = Tk()
+        
+        self.base.mainloop()
  
 class GameHandler:
     def __init__(self, starting_num = 21, starting_player = 'Player 1'): 
@@ -94,6 +106,8 @@ class GameHandler:
 
 def main(mode = 3):
     game = GameHandler()
+    gui = GUI()
+    gui.start()
     global matches_num
     matches_num = game.current_matches
     if not mode in [0, 1]:
