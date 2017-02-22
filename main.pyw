@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 
-import os
+import os, sys
+sys.path.append(os.path.dirname(__file__))
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
 

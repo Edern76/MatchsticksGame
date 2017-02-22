@@ -6,7 +6,7 @@ from utils import curDir, assetsDir, imageDir
 matches_num = 21
 playing = False
 chosen = 0
-lock = threading.Lock()
+lock = threading.RLock()
 """
 class Controller:
     def __init__(self):
@@ -14,7 +14,7 @@ class Controller:
         self.chosen = None
 """        
 
-def chooseNumber(self, number):
+def chooseNumber(number):
         global playing, chosen
         with lock:
             chosen = number
@@ -22,14 +22,14 @@ def chooseNumber(self, number):
         
         print('Chosen')
     
-def choose1(self):
-    self.chooseNumber(1)
+def choose1():
+    chooseNumber(1)
 
-def choose2(self):
-    self.chooseNumber(2)
+def choose2():
+    chooseNumber(2)
     
-def choose3(self):
-    self.chooseNumber(3)
+def choose3():
+    chooseNumber(3)
 
 
 # controller = Controller()
@@ -40,8 +40,18 @@ class GUI(threading.Thread):
         self.textField = None
         self.chosen = None
         self.playing = False
+        self._stop = threading.Event()
         
+    def stop(self):
+        self._stop.set()
+    
+    def stopped(self):
+        return self._stop.isSet()
+    
     def exit(self):
+        self.stop()
+        while not self.stopped():
+            continue
         os._exit(1)
 
     def run(self):
@@ -74,9 +84,9 @@ class GUI(threading.Thread):
         self.imageCanvas.place(width = 640, height = 400)
         
         self.buttonFrame = Frame(self.subFrame3)
-        self.button1 = Button(self.buttonFrame, text = "1", width = 5, command = choose1)
-        self.button2 = Button(self.buttonFrame, text = "2", width = 5, command = choose2)
-        self.button3 = Button(self.buttonFrame, text = "3", width = 5, command = choose3)
+        self.button1 = Button(self.buttonFrame, text = "1", width = 5, command = lambda : chooseNumder(1))
+        self.button2 = Button(self.buttonFrame, text = "2", width = 5, command = lambda : chooseNumber(2))
+        self.button3 = Button(self.buttonFrame, text = "3", width = 5, command = lambda : chooseNumber(3))
         self.matchButtons = [self.button1, self.button2, self.button3]
         for loop in self.matchButtons:
             loop.pack(side = LEFT, padx = 10)
@@ -134,7 +144,7 @@ class GameHandler:
             while not valid:
                 controller = gui
                 if self.current_matches >= 1:
-                    gui.button1.config(state = NORMAL)
+                    gui.button1.config(state = NORMAL, command = choose1)
                 if self.current_matches >= 2:
                     gui.button2.config(state = NORMAL)
                 if self.current_matches >= 3:
@@ -142,16 +152,17 @@ class GameHandler:
                 #controller.playing = True
                 playing = True
                 while True:
-                    #with lock:
-                    mustContinue = playing and (chosen == 0)  #(not controller.playing) or
-                    if mustContinue:
-                        print('wtf')
-                    else:
-                        #print(controller.playing)
-                        print(playing)
-                        print(mustContinue)
-                        print(chosen)
-                        break
+                    with lock:
+                        mustContinue = playing and (chosen == 0)  #(not controller.playing) or
+                        if mustContinue:
+                            #print('wtf')
+                            continue
+                        else:
+                            #print(controller.playing)
+                            print(playing)
+                            print(mustContinue)
+                            print(chosen)
+                            break
                 print('Loop ended')
                 for i in gui.matchButtons:
                     i.config(state = DISABLED)
