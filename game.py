@@ -188,26 +188,34 @@ class GameHandler:
             self.owner = owner
             
         def takeTurn(self):
+            self.n = 0
             n = self.n
             mainClass = self.owner
             matches_num = mainClass.current_matches
             removeMatch = mainClass.takeMatches
-            if matches_num == 4*n:
-                removeMatch(3)
-                #writeToField('AI took 3 matches')
-            elif matches_num == 4*n + 3:
-                removeMatch(2)
-                #writeToField('AI took 2 matches')
-            elif matches_num == 4*n + 2:
-                removeMatch(1)
-                #writeToField('AI took 1 match')
-            else:
-                num = randint(1, 3)
-                if matches_num - num < 0:
-                    num = matches_num
-                removeMatch(num)    
-                #writeToField('AI took ' + str(num) + ' match(es)')
-            n += 1
+            end = False
+            while not end:
+                if matches_num == 4*n:
+                    removeMatch(3)
+                    #writeToField('AI took 3 matches')
+                    end = True
+                elif matches_num == 4*n + 3:
+                    removeMatch(2)
+                    #writeToField('AI took 2 matches')
+                    end = True
+                elif matches_num == 4*n + 2:
+                    removeMatch(1)
+                    #writeToField('AI took 1 match')
+                    end = True
+                n += 1
+                if not end and 4*n > matches_num:
+                    num = randint(1, 3)
+                    if matches_num - num < 0:
+                        num = matches_num
+                    removeMatch(num)    
+                    end = True
+                    #writeToField('AI took ' + str(num) + ' match(es)')
+                
     
     def play(self, mode):
         if not mode in (0,1):

@@ -7,10 +7,6 @@ from utils import curDir, assetsDir, imageDir
 from tkinter import *
 
 
-
-
-
-
 root = Tk() #Initialisation de la fenètre principale
 root.geometry("400x600+0+0") #Réglage de la résolution de la fenêtre principale
 root.title("Ryuga no Allumette | Menu")
