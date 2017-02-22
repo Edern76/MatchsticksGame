@@ -22,16 +22,6 @@ def chooseNumber(number):
             playing = False
         
         print('Chosen')
-    
-def choose1():
-    chooseNumber(1)
-
-def choose2():
-    chooseNumber(2)
-    
-def choose3():
-    chooseNumber(3)
-
 
 # controller = Controller()
 
@@ -211,7 +201,7 @@ class GameHandler:
                 controller = gui
                 if playNum == 1:
                     if self.current_matches >= 1:
-                        gui.button1.config(state = NORMAL, command = choose1)
+                        gui.button1.config(state = NORMAL)
                     if self.current_matches >= 2:
                         gui.button2.config(state = NORMAL)
                     if self.current_matches >= 3:
@@ -220,7 +210,7 @@ class GameHandler:
                     curFrame = gui.buttonFrame
                 else:
                     if self.current_matches >= 1:
-                        gui.P2button1.config(state = NORMAL, command = choose1)
+                        gui.P2button1.config(state = NORMAL)
                     if self.current_matches >= 2:
                         gui.P2button2.config(state = NORMAL)
                     if self.current_matches >= 3:
