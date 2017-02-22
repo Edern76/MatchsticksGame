@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import os, sys
+import os, sys, name
 sys.path.append(os.path.dirname(__file__))
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
@@ -20,9 +20,19 @@ canvas.place(height = photo.height(), width = photo.width(), x = 75) #On place l
 logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la frame contenant l'image dans la fenêtre principale selon une grille, et on lui fait occuper trois colonnes de cette grille
 ###########################################
 
+def singleplayer():
+    fenetreNom = Toplevel(root)
+    nomRetourne = name.askName(fenetreNom)
+    print(nomRetourne)
+    if nomRetourne != '':
+        shellCommand = "python game.py 0 " + nomRetourne
+        os.system(shellCommand)
+    else:
+        pass
+
 ############Création du menu###############
 menuFrame = Frame(root) #On crée une frame contenant les éléments du menu
-bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = lambda : os.system("python game.py 0"))
+bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = singleplayer)
 bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = lambda : os.system("python game.py 1"))
 bouton1.pack()
 bouton2.pack()
