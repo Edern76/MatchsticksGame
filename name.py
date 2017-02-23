@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf8 -*-
+
 import threading, time
 from tkinter import *
 from tkinter.messagebox import *
@@ -32,13 +35,13 @@ class simpleGUI(threading.Thread):
         def confirm():
             global status
             if nom.get() == "" or " " in nom.get():
-                showerror('Saisie invalide', "Le nom ne doit pas contenir d'espace ou etre vide")
+                showerror('Saisie invalide', "Le nom ne doit pas contenir d'espace ou être vide")
                 status = ''
             elif len(nom.get()) > 12:
-                showerror('Saisie invalide', 'Le nom ne doit pas exceder 12 caracteres')
+                showerror('Saisie invalide', 'Le nom ne doit pas excéder 12 caractères')
                 status = ''
             elif nom.get() == "None":
-                showerror('Saisie invalide', 'Le nom ne doit pas etre "None"')
+                showerror('Saisie invalide', 'Le nom ne doit pas être "None"')
                 status =  ''
             else:
                 status = nom.get()
@@ -95,16 +98,16 @@ class multiGUI(threading.Thread):
         def confirm():
             global status
             if (nom1.get() == "" or " " in nom1.get()) or (nom2.get() == "" or " " in nom2.get()):
-                showerror('Saisie invalide', "Le nom ne doit pas contenir d'espace ou etre vide")
+                showerror('Saisie invalide', "Le nom ne doit pas contenir d'espace ou être vide")
                 status = ''
             elif (len(nom1.get()) > 12) or (len(nom2.get()) > 12) :
-                showerror('Saisie invalide', 'Le nom ne doit pas exceder 12 caracteres')
+                showerror('Saisie invalide', 'Le nom ne doit pas excéder 12 caractères')
                 status = ''
             elif (nom1.get() == "None") or (nom2.get() == "None"):
-                showerror('Saisie invalide', 'Le nom ne doit pas etre "None"')
+                showerror('Saisie invalide', 'Le nom ne doit pas être "None"')
                 status =  ''
             elif nom1.get() == nom2.get():
-                showerror('Saisie invalide', 'Les deux noms ne doivent pas etre identiques')
+                showerror('Saisie invalide', 'Les deux noms ne doivent pas être identiques')
             else:
                 status = (nom1.get(), nom2.get())
                 mainCon.destroy()
@@ -154,11 +157,6 @@ def askMultipleNames(attachTo = None, rootConsole = None):
     
     return status
 if __name__ == '__main__':
-    nameTuple = askMultipleNames()
-    if nameTuple is not None:
-        name1, name2 = nameTuple
-        print(name1)
-        print(name2)
-    else:
-        raise ValueError('Cancelled name entering')
+    from tkinter.messagebox import *
+    showerror('Erreur', 'Veuillez lancer main.pyw pour démarrer le programme')
     

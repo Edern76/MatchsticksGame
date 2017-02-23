@@ -33,7 +33,7 @@ class SingleplayerStarter(threading.Thread):
         nomRetourne = name.askSimpleName(fenetreNom, root)
         print(nomRetourne)
         if nomRetourne is not None:
-            shellCommand = pythonCommand + " game.py 0 " + nomRetourne
+            shellCommand = pythonCommand + " game.pyw 0 " + nomRetourne
             os.system(shellCommand)
         else:
             pass
@@ -46,7 +46,7 @@ class MultiplayerStarter(threading.Thread):
         tupleRetourne = name.askMultipleNames(fenetreNom, root)
         if tupleRetourne is not None:
             nom1, nom2 = tupleRetourne
-            shellCommand = pythonCommand + " game.py 1 " + nom1 + " " + nom2
+            shellCommand = pythonCommand + " game.pyw 1 " + nom1 + " " + nom2
             os.system(shellCommand)
         else:
             pass
