@@ -153,6 +153,7 @@ class GUI(threading.Thread):
         self.rWindow.pack(side = TOP, expand = Y, fill = BOTH) # On fait en sorte que la PanedWindow remplisse l'intégralité du volet de droite
         self.rFrame1 = Frame(self.rWindow, width = 340, height = 150) #Création des volets
         self.rFrame2 = Frame(self.rWindow, width = 340, height = 500) #Création des volets
+        self.rFrame2.pack_propagate(0)
         self.rFrame3 = Frame(self.rWindow, width = 340, height = 110) #Création des volets
         
         self.P2Canvas= Canvas(self.rFrame1, width = 80, height = 80, relief = GROOVE)
@@ -170,6 +171,9 @@ class GUI(threading.Thread):
         self.P1Label = Label(self.rFrame3, text = self.P1Name, relief = RIDGE, justify = CENTER, fg = 'gray', bg = 'white')
         self.P1Canvas.grid(row = 0, column = 1, rowspan = 5, columnspan = 2)
         self.P1Label.grid(row = 2, column = 4, columnspan = 3)
+        
+        self.quitButton = Button(self.rFrame2, text = 'Quitter', command = self.exit)
+        self.quitButton.place(anchor = CENTER, relx = 0.5, rely = 0.5)
         
         self.rWindow.add(self.rFrame1)
         self.rWindow.add(self.rFrame2)
