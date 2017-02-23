@@ -20,3 +20,7 @@ def findCurrentDir():
 curDir = findCurrentDir()
 assetsDir = os.path.join(curDir, "assets") #Correspond au dossier "assets"
 imageDir = os.path.join(assetsDir, "images") #Correspond au dossier "assets/images"
+
+if __name__ == '__main__':
+    from tkinter.messagebox import *
+    showerror('Erreur', 'Veuillez lancer main.pyw pour démarrer le programme')

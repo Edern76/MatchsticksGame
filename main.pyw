@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import os, sys
+import os, sys, name, threading, webbrowser
 sys.path.append(os.path.dirname(__file__))
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
 
 
 root = Tk() #Initialisation de la fenètre principale
-root.geometry("400x600+0+0") #Réglage de la résolution de la fenêtre principale
+screenWidth = root.winfo_screenwidth()
+screenHeight = root.winfo_screenheight()
+startX = screenWidth // 2 - 200
+startY = screenHeight // 2 - 250
+root.geometry("400x500+{}+{}".format(startX, startY)) #Réglage de la résolution de la fenêtre principale
 root.title("Ryuga no Allumette | Menu")
+
+if sys.platform.startswith('win') or sys.platform.startswith('win32') or sys.platform.startswith('win64'):
+    pythonCommand = 'python'
+else:
+    pythonCommand = 'python3'
 
 ############Creation de l'image############
 photo = PhotoImage(file= os.path.join(imageDir, "logo_sd.png")) #On accède à l'image nommée "logo_sd.png" dans le dossier des images
@@ -20,13 +29,53 @@ canvas.place(height = photo.height(), width = photo.width(), x = 75) #On place l
 logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la frame contenant l'image dans la fenêtre principale selon une grille, et on lui fait occuper trois colonnes de cette grille
 ###########################################
 
+class SingleplayerStarter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        fenetreNom = Toplevel(root)
+        nomRetourne = name.askSimpleName(fenetreNom, root)
+        print(nomRetourne)
+        if nomRetourne is not None:
+            shellCommand = pythonCommand + " game.pyw 0 " + nomRetourne
+            os.system(shellCommand)
+        else:
+            pass
+
+class MultiplayerStarter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        fenetreNom = Toplevel(root)
+        tupleRetourne = name.askMultipleNames(fenetreNom, root)
+        if tupleRetourne is not None:
+            nom1, nom2 = tupleRetourne
+            shellCommand = pythonCommand + " game.pyw 1 " + nom1 + " " + nom2
+            os.system(shellCommand)
+        else:
+            pass
+
 ############Création du menu###############
 menuFrame = Frame(root) #On crée une frame contenant les éléments du menu
-bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = lambda : os.system("python game.py 0"))
-bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = lambda : os.system("python game.py 1"))
+solo = SingleplayerStarter()
+multi = MultiplayerStarter()
+bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = solo.start)
+bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = multi.start)
 bouton1.pack()
-bouton2.pack()
+bouton2.pack(pady = 2)
 menuFrame.grid(row = 4, column = 1) #On place cette frame dans la colonne centrale et quelques lignes en dessous de la frame précédente
+
+menuFrame2 = Frame(root)
+gitBouton = Button(menuFrame2, text = "Page GitHub", command = lambda : webbrowser.open("https://github.com/Edern76/MatchsticksGame", new = 2))
+bouton3 = Button(menuFrame2, text = "Quitter", command = root.destroy)
+gitBouton.pack()
+bouton3.pack(pady = 2)
+menuFrame2.grid(row = 7, column = 1)
+
+creditsLabel = Label(root, text = "Erwan CASTIONI et Gawein LE GOFF", fg = "gray")
+licenseLabel = Label(root, text = "License MIT", fg = 'gray')
+creditsLabel.place(relx = 0, rely = 0.965)
+licenseLabel.place(relx = 0.825, rely = 0.965)
 ###########################################
 
 colNum, rowNum = root.grid_size() #On récupère le nombre de colonnes et de lignes de la grille (le nombre de colonnes n'est pas utilisé, mais on doit le récupérer pour récupérer le nombre de lignes puisque la méthode grid_size() renvoie un tuple de deux éléments où le nombre de lignes est en deuxième position)
