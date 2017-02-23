@@ -36,7 +36,6 @@ class SingleplayerStarter(threading.Thread):
     def run(self):
         fenetreNom = Toplevel(root)
         nomRetourne = name.askSimpleName(fenetreNom, root)
-        print(nomRetourne)
         if nomRetourne is not None:
             fenetreJeu = Toplevel(root)
             game.main(0, fenetreJeu, nomRetourne)
