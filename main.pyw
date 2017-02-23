@@ -2,23 +2,23 @@
 # -*- coding: utf8 -*-
 
 import os, sys, name, threading, webbrowser
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(__file__)) #Pour éviter des erreur sous UNIX
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
 
 
 root = Tk() #Initialisation de la fenètre principale
-screenWidth = root.winfo_screenwidth()
-screenHeight = root.winfo_screenheight()
-startX = screenWidth // 2 - 200
-startY = screenHeight // 2 - 250
+screenWidth = root.winfo_screenwidth() #Récupération de la résolution de l'écran
+screenHeight = root.winfo_screenheight() #Récupération de la résolution de l'écran
+startX = screenWidth // 2 - 200 #Détermination des coordonnées telles que la fenêtre soit au centre de l'écran
+startY = screenHeight // 2 - 250 #Détermination des coordonnées telles que la fenêtre soit au centre de l'écran
 root.geometry("400x500+{}+{}".format(startX, startY)) #Réglage de la résolution de la fenêtre principale
 root.title("Ryuga no Allumette | Menu")
 
 if sys.platform.startswith('win') or sys.platform.startswith('win32') or sys.platform.startswith('win64'):
-    pythonCommand = 'python'
+    pythonCommand = 'python' #Commande pour lancer un programme Python sous windows
 else:
-    pythonCommand = 'python3'
+    pythonCommand = 'python3' #Commande pour lancer un programme Python sous Linux/OSX
 
 ############Creation de l'image############
 photo = PhotoImage(file= os.path.join(imageDir, "logo_sd.png")) #On accède à l'image nommée "logo_sd.png" dans le dossier des images
