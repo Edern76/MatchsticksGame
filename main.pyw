@@ -11,6 +11,11 @@ root = Tk() #Initialisation de la fenètre principale
 root.geometry("400x600+0+0") #Réglage de la résolution de la fenêtre principale
 root.title("Ryuga no Allumette | Menu")
 
+if sys.platform.startswith('win') or sys.platform.startswith('win32') or sys.platform.startswith('win64'):
+    pythonCommand = 'python'
+else:
+    pythonCommand = 'python3'
+
 ############Creation de l'image############
 photo = PhotoImage(file= os.path.join(imageDir, "logo_sd.png")) #On accède à l'image nommée "logo_sd.png" dans le dossier des images
 logoFrame = Frame(root, width = 400, height = photo.height()) #On crée une frame occupant toute la largeur de l'écran destinée à contenir l'image
@@ -28,7 +33,7 @@ class SingleplayerStarter(threading.Thread):
         nomRetourne = name.askSimpleName(fenetreNom, root)
         print(nomRetourne)
         if nomRetourne is not None:
-            shellCommand = "python game.py 0 " + nomRetourne
+            shellCommand = pythonCommand + " game.py 0 " + nomRetourne
             os.system(shellCommand)
         else:
             pass
@@ -41,7 +46,7 @@ class MultiplayerStarter(threading.Thread):
         tupleRetourne = name.askMultipleNames(fenetreNom, root)
         if tupleRetourne is not None:
             nom1, nom2 = tupleRetourne
-            shellCommand = "python game.py 1 " + nom1 + " " + nom2
+            shellCommand = pythonCommand + " game.py 1 " + nom1 + " " + nom2
             os.system(shellCommand)
         else:
             pass

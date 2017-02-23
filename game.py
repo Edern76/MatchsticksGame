@@ -220,7 +220,7 @@ class GameHandler:
                 raise ValueError("Attempting to take an invalid number of matches ({})".format(number))
             else:
                 self.current_matches -= number
-                writeToField(self.curPlayName + ' took '+ str(number) + " matches.")
+                writeToField(self.curPlayName + ' a pris '+ str(number) + " allumettes.")
                 matchesToMove = []
                 moveThreads = []
                 for loop in range(number):
@@ -251,7 +251,7 @@ class GameHandler:
             else:
                 self.curPlayName = gui.P1Name
                 gui.P2Label.config(fg = "gray")
-            writeToField(self.curPlayName + " wins !")
+            writeToField(self.curPlayName + " remporte la partie !")
             return 'win'
         else:
             return 'continue'
@@ -367,10 +367,10 @@ class GameHandler:
         turnNum = 0
         while not self.checkWin() == 'win':
             if self.current_player in ('Player 2', 'AI'):
-                writeToField(gui.P2Name + "'s turn.")
+                writeToField("Tour de " + gui.P2Name)
                 self.curPlayName = gui.P2Name
             else:
-                writeToField(gui.P1Name +"'s turn.")
+                writeToField("Tour de " + gui.P1Name)
                 self.curPlayName = gui.P1Name
             #writeToField('Current matches : ' + str(self.current_matches))
             if not mode:
