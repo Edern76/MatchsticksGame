@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import os, sys, name, threading, webbrowser
+import os, sys, name, threading, webbrowser, game
 sys.path.append(os.path.dirname(__file__)) #Pour éviter des erreur sous UNIX
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
@@ -15,10 +15,6 @@ startY = screenHeight // 2 - 250 #Détermination des coordonnées telles que la 
 root.geometry("400x500+{}+{}".format(startX, startY)) #Réglage de la résolution de la fenêtre principale
 root.title("Ryuga no Allumette | Menu")
 
-if sys.platform.startswith('win') or sys.platform.startswith('win32') or sys.platform.startswith('win64'):
-    pythonCommand = 'python' #Commande pour lancer un programme Python sous windows
-else:
-    pythonCommand = 'python3' #Commande pour lancer un programme Python sous Linux/OSX
 
 ############Creation de l'image############
 photo = PhotoImage(file= os.path.join(imageDir, "logo_sd.png")) #On accède à l'image nommée "logo_sd.png" dans le dossier des images
@@ -42,8 +38,8 @@ class SingleplayerStarter(threading.Thread):
         nomRetourne = name.askSimpleName(fenetreNom, root)
         print(nomRetourne)
         if nomRetourne is not None:
-            shellCommand = pythonCommand + " game.pyw 0 " + nomRetourne
-            os.system(shellCommand)
+            fenetreJeu = Toplevel(root)
+            game.main(0, fenetreJeu, nomRetourne)
         else:
             pass
         self.stop()
@@ -61,8 +57,8 @@ class MultiplayerStarter(threading.Thread):
         tupleRetourne = name.askMultipleNames(fenetreNom, root)
         if tupleRetourne is not None:
             nom1, nom2 = tupleRetourne
-            shellCommand = pythonCommand + " game.pyw 1 " + nom1 + " " + nom2
-            os.system(shellCommand)
+            fenetreJeu = Toplevel(root)
+            game.main(1, fenetreJeu, name1 = nom1, name2 = nom2)
         else:
             pass
         self.stop()

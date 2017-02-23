@@ -10,7 +10,6 @@ matches_num = 21
 playing = False
 chosen = 0
 lock = threading.RLock()
-args = sys.argv
 #P1matches = 0
 #P2matches = 0
 """
@@ -31,7 +30,7 @@ def chooseNumber(number):
 # controller = Controller()
 
 class GUI(threading.Thread):
-    def __init__(self):
+    def __init__(self, attachTo = None, mode = 0):
         threading.Thread.__init__(self)
         self.textField = None
         self.chosen = None
@@ -43,6 +42,9 @@ class GUI(threading.Thread):
         self.matchText = "NaN"
         self.matchesImages = []
         self._stop = threading.Event()
+        self.mode = mode
+        self.attachTo = attachTo
+        self.base = self.attachTo
         
     def stop(self):
         self._stop.set()
@@ -57,8 +59,11 @@ class GUI(threading.Thread):
         os._exit(1)
 
     def run(self):
-##############Creation de la fenêtre principale##############       
-        self.base = Tk()
+##############Creation de la fenêtre principale##############
+        if self.attachTo is None:
+            self.base = Tk()
+        else:
+            self.base = self.attachTo
         screenWidth = self.base.winfo_screenwidth()
         screenHeight = self.base.winfo_screenheight()
         startX = screenWidth // 2 - (1280 // 2)
@@ -100,13 +105,14 @@ class GUI(threading.Thread):
 #####################################################
 
 ##############Placement des allumettes##############
-        matchX = 15 #Abscisse sur le canvas de la première allumette
-        matchY = 135 #Ordonée sur le canvas des allumettes
-        matchFile = PhotoImage(file = os.path.join(imageDir, 'match_smaller.png')) #Récupération de l'image correspondant à une allumette
+        self.matchX = 15 #Abscisse sur le canvas de la première allumette
+        self.matchY = 135 #Ordonée sur le canvas des allumettes
+        self.matchFile = PhotoImage(file = os.path.join(imageDir, 'match_smaller.png')) #Récupération de l'image correspondant à une allumette
         for loop in range(21):
-            allumette = self.imageCanvas.create_image(matchX, matchY, anchor = NW, image = matchFile) #Placement de l'image sur le canvas
+            allumette = self.imageCanvas.create_image(self.matchX, self.matchY, anchor = NW, image = self.matchFile) #Placement de l'image sur le canvas
+            print("Allumette")
             self.matchesImages.append(allumette) #Ajout de l'image à la liste des allumettes (pour pouvoir ensuite influer sur les images en dehors de la classe GUI)
-            matchX += 30 #Incrémentation de l'abscisse de la prochaine allumette de 30 pixels (= on place la prochaine allumette 30 pixels sur la droite de l'allumette précédente)
+            self.matchX += 30 #Incrémentation de l'abscisse de la prochaine allumette de 30 pixels (= on place la prochaine allumette 30 pixels sur la droite de l'allumette précédente)
 #####################################################
 
         self.imageCanvas.place(width = 640, height = 400) #Placement du canvas dans le volet
@@ -123,10 +129,9 @@ class GUI(threading.Thread):
         self.buttonFrame.pack(side = TOP, padx = 20, pady = 70) #Placement de la frame contenant les boutons
 ###############################################################
         
-        args = sys.argv #Récupération des arguments passés au module par l'intermédiaire du shell
 
 ##############Création des contrôles du joueur 2##############
-        if int(args[1]) == 1: #Si on a choisi le mode 2 joueurs, on crée les contrôles du joueur 2. La procédure est alors la même que pour les contrôles du joueur 1 mais dans une frame différente.
+        if self.mode == 1: #Si on a choisi le mode 2 joueurs, on crée les contrôles du joueur 2. La procédure est alors la même que pour les contrôles du joueur 1 mais dans une frame différente.
             self.P2buttonFrame = Frame(self.subFrame1)
             self.P2button1 = Button(self.P2buttonFrame, text = "1", width = 5, command = lambda : chooseNumber(1))
             self.P2button2 = Button(self.P2buttonFrame, text = "2", width = 5, command = lambda : chooseNumber(2))
@@ -144,7 +149,6 @@ class GUI(threading.Thread):
             self.P2button2 = None
             self.P2button3 = None
             self.P2matchButtons = None
-            print("Current mode : " + str(args[1])) #Ligne utilisée uniquement pour le débugage
 #############################################################
 
 
@@ -186,9 +190,10 @@ class GUI(threading.Thread):
         
         
         self.base.protocol("WM_DELETE_WINDOW", self.exit)
-        self.base.mainloop()
+        if self.attachTo is None:
+            self.base.mainloop()
+            
 
-        raise SystemExit
 gui = GUI()
 
 def writeToField(message):
@@ -405,10 +410,12 @@ class GameHandler:
 
 
 
-def main(mode = 3):
+def main(mode = 3, attachTo = None, name1 = None, name2 = None):
+    global gui
     game = GameHandler()
+    gui = GUI(attachTo, mode)
     gui.start()
-    time.sleep(3)
+    time.sleep(4)
     global matches_num
     matches_num = game.current_matches
     if not mode in [0, 1]:
@@ -421,11 +428,11 @@ def main(mode = 3):
     if mode == 0:
         gui.P2Name = "R0B0T0"
         gui.P2Avatar = "AI_avatar_big.png"
-        gui.P1Name = str(args[2])
+        gui.P1Name = str(name1)
     else:
-        gui.P2Name = str(args[3])
+        gui.P2Name = str(name2)
         gui.P2Avatar = "P2_avatar.png"
-        gui.P1Name = str(args[2])
+        gui.P1Name = str(name1)
     gui.P1Avatar = "P1_avatar.png"
     gui.P2Label.config(text = gui.P2Name, fg = "red")
     gui.P1Label.config(text = gui.P1Name, fg = "blue")
@@ -434,4 +441,5 @@ def main(mode = 3):
     game.play(mode)
 
 if __name__ == "__main__":
-    main(int(args[1]))
+    from tkinter.messagebox import *
+    showerror('Erreur', 'Veuillez lancer main.pyw pour démarrer le programme')
