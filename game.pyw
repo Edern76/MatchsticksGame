@@ -41,8 +41,6 @@ class GUI(threading.Thread):
         self.P1Avatar = "loading_avatar_big.png"
         self.P2Avatar = "loading_avatar_big.png"
         self.matchText = "NaN"
-        #self.P1Text = "Allumettes : " + str(P1matches)
-        #self.P2Text = "Allumettes : " + str(P2matches)
         self.matchesImages = []
         self._stop = threading.Event()
         
@@ -166,10 +164,8 @@ class GUI(threading.Thread):
         self.P2File = PhotoImage(file = os.path.join(imageDir, self.P2Avatar))
         self.P2Image = self.P2Canvas.create_image(0, 0, anchor = NW, image = self.P2File)
         self.P2Label = Label(self.rFrame1, text = self.P2Name, relief = RIDGE, justify = CENTER, fg = 'gray', bg = 'white')
-        #self.P2MLabel = Label(self.rFrame1, text = self.P2Text, relief = RIDGE, justify = CENTER, bg = 'white')
         self.P2Canvas.grid(row = 0, column = 1, rowspan = 5, columnspan = 2)
-        self.P2Label.grid(row = 2, column = 4, columnspan = 3)
-        #self.P2MLabel.grid(row = 4, column = 4, columnspan = 3)
+        self.P2Label.grid(row = 2, column = 4, columnspan = 3, pady = 0, ipady = 0)
         
         self.P1Canvas= Canvas(self.rFrame3, width = 80, height = 80, relief = GROOVE)
         self.P1File = PhotoImage(file = os.path.join(imageDir, self.P1Avatar))
@@ -232,7 +228,10 @@ class GameHandler:
                 raise ValueError("Attempting to take an invalid number of matches ({})".format(number))
             else:
                 self.current_matches -= number
-                writeToField(self.curPlayName + ' a pris '+ str(number) + " allumettes.")
+                if number > 1:
+                    writeToField(self.curPlayName + ' a pris '+ str(number) + " allumettes.")
+                else:
+                    writeToField(self.curPlayName + ' a pris '+ str(number) + " allumette.")
                 matchesToMove = []
                 moveThreads = []
                 for loop in range(number):
