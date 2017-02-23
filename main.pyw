@@ -32,6 +32,11 @@ logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la fr
 class SingleplayerStarter(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self._stop = threading.Event()
+        
+    def stop(self):
+        self._stop.set()
+        
     def run(self):
         fenetreNom = Toplevel(root)
         nomRetourne = name.askSimpleName(fenetreNom, root)
@@ -41,10 +46,16 @@ class SingleplayerStarter(threading.Thread):
             os.system(shellCommand)
         else:
             pass
+        self.stop()
 
 class MultiplayerStarter(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
+        self._stop = threading.Event()
+    
+    def stop(self):
+        self._stop.set()
+        
     def run(self):
         fenetreNom = Toplevel(root)
         tupleRetourne = name.askMultipleNames(fenetreNom, root)
@@ -54,13 +65,19 @@ class MultiplayerStarter(threading.Thread):
             os.system(shellCommand)
         else:
             pass
-
+        self.stop()
+        
+def startSolo():
+    solo = SingleplayerStarter()
+    solo.start()
+    
+def startMulti():
+    multi = MultiplayerStarter()
+    multi.start()   
 ############Création du menu###############
 menuFrame = Frame(root) #On crée une frame contenant les éléments du menu
-solo = SingleplayerStarter()
-multi = MultiplayerStarter()
-bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = solo.start)
-bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = multi.start)
+bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = startSolo)
+bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = startMulti)
 bouton1.pack()
 bouton2.pack(pady = 2)
 menuFrame.grid(row = 4, column = 1) #On place cette frame dans la colonne centrale et quelques lignes en dessous de la frame précédente
