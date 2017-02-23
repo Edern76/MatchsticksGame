@@ -40,6 +40,7 @@ class GUI(threading.Thread):
         self.P2Name = "Loading..."
         self.P1Avatar = "loading_avatar_big.png"
         self.P2Avatar = "loading_avatar_big.png"
+        self.matchText = "NaN"
         #self.P1Text = "Allumettes : " + str(P1matches)
         #self.P2Text = "Allumettes : " + str(P2matches)
         self.matchesImages = []
@@ -177,8 +178,10 @@ class GUI(threading.Thread):
         self.P1Canvas.grid(row = 0, column = 1, rowspan = 5, columnspan = 2)
         self.P1Label.grid(row = 2, column = 4, columnspan = 3)
         
+        self.matchLabel = Label(self.rFrame2, text = 'Allumettes : ' + str(self.matchText), bg = "white", relief = RIDGE)
+        self.matchLabel.place(anchor = CENTER, relx = 0.50, rely = 0.47)
         self.quitButton = Button(self.rFrame2, text = 'Quitter', command = self.exit)
-        self.quitButton.place(anchor = CENTER, relx = 0.5, rely = 0.5)
+        self.quitButton.place(anchor = CENTER, relx = 0.50, rely = 0.53)
         
         self.rWindow.add(self.rFrame1)
         self.rWindow.add(self.rFrame2)
@@ -253,6 +256,8 @@ class GameHandler:
             return 'fail'
         
     def checkWin(self):
+        gui.matchText = str(self.current_matches)
+        gui.matchLabel.configure(text = "Allumettes : " + str(gui.matchText))
         if self.current_matches <= 0:
             if self.current_player in ('Player 2', 'AI'):
                 self.curPlayName = gui.P2Name
