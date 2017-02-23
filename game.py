@@ -8,6 +8,7 @@ from utils import curDir, assetsDir, imageDir
 
 matches_num = 21
 playing = False
+exitted = False
 chosen = 0
 lock = threading.RLock()
 #P1matches = 0
@@ -23,9 +24,8 @@ def chooseNumber(number):
         global playing, chosen
         with lock:
             chosen = number
-            playing = False
-        
-        print('Chosen')
+            playing = False   
+
 
 # controller = Controller()
 
@@ -47,7 +47,9 @@ class GUI(threading.Thread):
         self.base = self.attachTo
         
     def stop(self):
+        global exitted
         self._stop.set()
+        exitted = True
     
     def stopped(self):
         return self._stop.isSet()
@@ -56,7 +58,8 @@ class GUI(threading.Thread):
         self.stop()
         while not self.stopped():
             continue
-        os._exit(1)
+        self.attachTo.destroy()
+        del self
 
     def run(self):
 ##############Creation de la fenêtre principale##############
@@ -110,7 +113,6 @@ class GUI(threading.Thread):
         self.matchFile = PhotoImage(file = os.path.join(imageDir, 'match_smaller.png')) #Récupération de l'image correspondant à une allumette
         for loop in range(21):
             allumette = self.imageCanvas.create_image(self.matchX, self.matchY, anchor = NW, image = self.matchFile) #Placement de l'image sur le canvas
-            print("Allumette")
             self.matchesImages.append(allumette) #Ajout de l'image à la liste des allumettes (pour pouvoir ensuite influer sur les images en dehors de la classe GUI)
             self.matchX += 30 #Incrémentation de l'abscisse de la prochaine allumette de 30 pixels (= on place la prochaine allumette 30 pixels sur la droite de l'allumette précédente)
 #####################################################
@@ -141,7 +143,6 @@ class GUI(threading.Thread):
                 loop.pack(side = LEFT, padx = 10)
                 loop.config(state = DISABLED)
             self.P2buttonFrame.pack(side = BOTTOM, padx = 20, pady = 30)
-            print("Player 2 config complete") #Ligne utilisée uniquement pour le débugage, afin de signifier que la création des contrôles s'est correctement executée
         
         else: #Sinon, on ne crée pas les contrôles
             self.P2buttonFrame = None
@@ -248,7 +249,6 @@ class GameHandler:
                     if playerNum == int(1):
                         mover = ImageMover(i, dx = 0, dy = 1, repet = 50, sleepTime = 0.005)
                     else:
-                        print('PlayNum = ' + str(playerNum))
                         mover = ImageMover(i, dx = 0, dy = -1, repet = 50, sleepTime = 0.005)
                     moveThreads.append(mover)
                 for j in moveThreads:
@@ -260,6 +260,8 @@ class GameHandler:
             return 'fail'
         
     def checkWin(self):
+        if exitted:
+            return
         gui.matchText = str(self.current_matches)
         gui.matchLabel.configure(text = "Allumettes : " + str(gui.matchText))
         if self.current_matches <= 0:
@@ -307,27 +309,20 @@ class GameHandler:
                 #controller.playing = True
                 playing = True
                 while True:
+                    if exitted:
+                        return
                     with lock:
                         mustContinue = playing and (chosen == 0)  #(not controller.playing) or
                         if mustContinue:
-                            #print('wtf')
                             continue
                         else:
-                            #print(controller.playing)
-                            print(playing)
-                            print(mustContinue)
-                            print(chosen)
                             break
-                print('Loop ended')
-                for i in buttonList:
-                    i.config(state = DISABLED)
-                    '''
-                    if args[1] == int(1):
-                        i.pack_remove()
-                    '''
+                if not exitted:
+                    for i in buttonList:
+                        i.config(state = DISABLED)
+                else:
+                    return
                 chosenNum = int(chosen)
-                print(chosen)
-                print(chosenNum)
                 if chosenNum != 0:
                     valid = True
                     break
@@ -336,8 +331,11 @@ class GameHandler:
         
         status = 'fail'
         while status != 'done':
-            num = inputNumber()
-            status = self.takeMatches(num, playerNum = playNum)
+            if exitted:
+                return
+            else:
+                num = inputNumber()
+                status = self.takeMatches(num, playerNum = playNum)
             
     
     class AIComponent:
@@ -353,6 +351,8 @@ class GameHandler:
             removeMatch = mainClass.takeMatches
             end = False
             while not end:
+                if exitted:
+                    return
                 if matches_num == 4*n:
                     removeMatch(3, playerNum = 2)
                     #writeToField('AI took 3 matches')
@@ -384,7 +384,7 @@ class GameHandler:
             AI = self.AI.takeTurn
         player = self.player
         turnNum = 0
-        while not self.checkWin() == 'win':
+        while not self.checkWin() == 'win' and not exitted:
             if self.current_player in ('Player 2', 'AI'):
                 writeToField("Tour de " + gui.P2Name)
                 self.curPlayName = gui.P2Name
@@ -411,20 +411,14 @@ class GameHandler:
 
 
 def main(mode = 3, attachTo = None, name1 = None, name2 = None):
-    global gui
+    global gui, exitted
+    exitted = False
     game = GameHandler()
     gui = GUI(attachTo, mode)
     gui.start()
     time.sleep(4)
     global matches_num
     matches_num = game.current_matches
-    if not mode in [0, 1]:
-        while not mode in [0, 1]:
-            print(mode)
-            mode = int(input('Against player (1) or computer (0) '))
-    matches_num = game.current_matches #int(input('how many matches? '))
-    print('Starting matches number: ' + str(matches_num))
-    print(mode)
     if mode == 0:
         gui.P2Name = "R0B0T0"
         gui.P2Avatar = "AI_avatar_big.png"
