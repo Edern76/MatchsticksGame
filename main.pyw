@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
-import os, sys, name
+import os, sys, name, threading
 sys.path.append(os.path.dirname(__file__))
 from utils import curDir, assetsDir, imageDir
 from tkinter import *
@@ -20,20 +20,38 @@ canvas.place(height = photo.height(), width = photo.width(), x = 75) #On place l
 logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la frame contenant l'image dans la fenêtre principale selon une grille, et on lui fait occuper trois colonnes de cette grille
 ###########################################
 
-def singleplayer():
-    fenetreNom = Toplevel(root)
-    nomRetourne = name.askName(fenetreNom)
-    print(nomRetourne)
-    if nomRetourne != '':
-        shellCommand = "python game.py 0 " + nomRetourne
-        os.system(shellCommand)
-    else:
-        pass
+class SingleplayerStarter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        fenetreNom = Toplevel(root)
+        nomRetourne = name.askSimpleName(fenetreNom, root)
+        print(nomRetourne)
+        if nomRetourne is not None:
+            shellCommand = "python game.py 0 " + nomRetourne
+            os.system(shellCommand)
+        else:
+            pass
+
+class MultiplayerStarter(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        fenetreNom = Toplevel(root)
+        tupleRetourne = name.askMultipleNames(fenetreNom, root)
+        if tupleRetourne is not None:
+            nom1, nom2 = tupleRetourne
+            shellCommand = "python game.py 1 " + nom1 + " " + nom2
+            os.system(shellCommand)
+        else:
+            pass
 
 ############Création du menu###############
 menuFrame = Frame(root) #On crée une frame contenant les éléments du menu
-bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = singleplayer)
-bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = lambda : os.system("python game.py 1"))
+solo = SingleplayerStarter()
+multi = MultiplayerStarter()
+bouton1 = Button(menuFrame, text = "Jouer contre l'IA", command = solo.start)
+bouton2 = Button(menuFrame, text = "Jouer contre un autre joueur", command = multi.start)
 bouton1.pack()
 bouton2.pack()
 menuFrame.grid(row = 4, column = 1) #On place cette frame dans la colonne centrale et quelques lignes en dessous de la frame précédente

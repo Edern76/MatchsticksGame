@@ -409,9 +409,9 @@ def main(mode = 3):
         gui.P2Avatar = "AI_avatar_big.png"
         gui.P1Name = str(args[2])
     else:
-        gui.P2Name = "Player 2"
+        gui.P2Name = str(args[3])
         gui.P2Avatar = "P2_avatar.png"
-        gui.P1Name = "Player 1"
+        gui.P1Name = str(args[2])
     gui.P1Avatar = "P1_avatar.png"
     gui.P2Label.config(text = gui.P2Name, fg = "red")
     gui.P1Label.config(text = gui.P1Name, fg = "blue")
