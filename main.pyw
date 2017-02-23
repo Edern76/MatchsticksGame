@@ -92,7 +92,7 @@ menuFrame2.grid(row = 7, column = 1)
 creditsLabel = Label(root, text = "Erwan CASTIONI et Gawein LE GOFF", fg = "gray")
 licenseLabel = Label(root, text = "License MIT", fg = 'gray')
 creditsLabel.place(relx = 0, rely = 0.965)
-licenseLabel.place(relx = 0.825, rely = 0.965)
+licenseLabel.place(relx = 0.825, rely = 0.963)
 ###########################################
 
 colNum, rowNum = root.grid_size() #On récupère le nombre de colonnes et de lignes de la grille (le nombre de colonnes n'est pas utilisé, mais on doit le récupérer pour récupérer le nombre de lignes puisque la méthode grid_size() renvoie un tuple de deux éléments où le nombre de lignes est en deuxième position)
