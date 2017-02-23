@@ -60,7 +60,12 @@ class GUI(threading.Thread):
     def run(self):
 ##############Creation de la fenêtre principale##############       
         self.base = Tk()
-        self.base.geometry('1280x720+0+0')
+        screenWidth = self.base.winfo_screenwidth()
+        screenHeight = self.base.winfo_screenheight()
+        startX = screenWidth // 2 - (1280 // 2)
+        startY = ((screenHeight // 2) - (720 // 2)) - 40
+        self.base.geometry('1280x720+{}+{}'.format(startX, startY))
+        self.base.title("Loading...")
 #############################################################
 
 ##############Division de la fenêtre en trois parties verticales##############
@@ -364,6 +369,7 @@ class GameHandler:
     def play(self, mode):
         if not mode in (0,1):
             raise ValueError("Mode number must be either 0 or 1")
+        gui.base.title("Ryuga no Allumette")
         if not mode:
             self.AI = self.AIComponent(self)
             AI = self.AI.takeTurn
