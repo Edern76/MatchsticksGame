@@ -211,13 +211,32 @@ def writeToField(message):
     '''
     Permet d'écrire un message dans la zone de texte à gauche de l'interface
     '''
-    convMessage = message + '\n'
-    gui.textField.config(state = NORMAL)
-    gui.textField.insert('end', convMessage)
-    gui.textField.config(state = DISABLED)
+    convMessage = message + '\n' #On ajoute la commande de saut de ligne à la fin du message
+    gui.textField.config(state = NORMAL) #On active la zone de texte afin de pouvoir écrire dedans
+    gui.textField.insert('end', convMessage) #On ajoute le message après ceux déjà existants
+    gui.textField.config(state = DISABLED) #On désactive la zone de texte afin de la repasser en lecture seule
 
 class ImageMover(threading.Thread):
+    '''
+    Permet d'animer le déplacement d'une image. Ce déplacement est réalisé dans un Thread, afin de pouvoir déplacer plusieurs images simultanément
+    '''
     def __init__(self, image, dx, dy, repet = 1, sleepTime = 0, deleteWhenDone = True):
+        '''
+        @type dx: int
+        @param dx: Valeur du déplacement en abscisse à chaque étape de l'animation
+        
+        @type dy : int
+        @param dy : Valeur du déplacement en ordonnée à chaque étape de l'animation
+        
+        @type repet : int
+        @param repet : Nombre d'étapes de l'animation
+        
+        @type sleepTime: float
+        @param sleepTime : Temps en secondes entre chaque étape. Si ce temps est égal à 0, l'animation est quasi instantanée, et donc quasi invisible
+        
+        @type deleteWhenDone : bool
+        @param deleteWhenDone : Si cette variable est égale à True, on efface l'image à la fin de l'animation. Sinon, on ne l'efface pas
+        '''
         threading.Thread.__init__(self)
         self.image = image
         self.dx = dx
@@ -229,182 +248,173 @@ class ImageMover(threading.Thread):
         
     def run(self):
         for w in range(self.repet):
-            gui.imageCanvas.move(self.image, self.dx, self.dy)
-            time.sleep(self.sleepTime)
+            gui.imageCanvas.move(self.image, self.dx, self.dy) #A chaque étape, on déplace l'image selon les coordonnées spécifiées
+            time.sleep(self.sleepTime) #Puis on attend le temps indiqué avant de poursuivre l'animation
         if self.deleteWhenDone:
-            gui.imageCanvas.delete(self.image)
+            gui.imageCanvas.delete(self.image) #Si la variable correspondante est égale à True, alors on efface l'image après l'animation.
 
 class GameHandler:
+    '''
+    Classe contenant les fonctions nécessaires au déroulement du jeu.
+    '''
     def __init__(self, starting_num = 21, starting_player = 'Player 1'): 
         self.current_matches = starting_num
-        self.current_player = starting_player
-        self.AI = None
-        self.curPlayName = gui.P1Name
-        
+        self.current_player = starting_player #L'identifiant du joueur dont c'est le tour. "Player 1" si c'est le joueur 1, "Player 2" ou "AI" si c'est l'IA ou le joueur 2. Notez que cela est différent du nom réel des joueurs
+        self.AI = None #Par défaut, on n'a pas d'IA
+        self.curPlayName = gui.P1Name #Le nom du joueur duquel c'est le tour
+                
     def takeMatches(self, number, playerNum = 1):
         try:
             if number not in range (1,4) or self.current_matches < number:
-                raise ValueError("Attempting to take an invalid number of matches ({})".format(number))
+                raise ValueError("Attempting to take an invalid number of matches ({})".format(number)) #On provoque une erreur si on essaye de prendre un nombre d'allumettes invalide (cela est cependant théoriquement impossible)
             else:
-                self.current_matches -= number
+                self.current_matches -= number #On soustrait le nombre d'allumettes prises au nombre d'allumette restantes
                 if number > 1:
-                    writeToField(self.curPlayName + ' a pris '+ str(number) + " allumettes.")
+                    writeToField(self.curPlayName + ' a pris '+ str(number) + " allumettes.") #On écrit dans le champ de texte le nom du joueur ayant pris les allumettes et le nombre d'allumettes qu'il a pris
                 else:
                     writeToField(self.curPlayName + ' a pris '+ str(number) + " allumette.")
-                matchesToMove = []
-                moveThreads = []
-                for loop in range(number):
-                    matchesToMove.append(gui.matchesImages[-1])
-                    #gui.imageCanvas.move(gui.matchesImages[-1], 0, 1)
-                    #gui.imageCanvas.delete(gui.matchesImages[-1])
-                    del gui.matchesImages[-1]
+                matchesToMove = [] #Liste des allumettes dont il faut animer la prise
+                moveThreads = [] #Liste des threads chargés de l'animation des allumettes
+                for loop in range(number): #On répète le bloc ci-dessous autant de fois que l'on a pris d'allumette
+                    matchesToMove.append(gui.matchesImages[-1]) #On ajoute à la liste des allumettes à animer la dernière allumette de la liste des images d'allumettes du GUI
+                    del gui.matchesImages[-1] #On retire cette image de la liste, afin de ne pas prendre deux fois la même
                 for i in matchesToMove:
                     if playerNum == int(1):
-                        mover = ImageMover(i, dx = 0, dy = 1, repet = 50, sleepTime = 0.005)
+                        mover = ImageMover(i, dx = 0, dy = 1, repet = 50, sleepTime = 0.005) #Si il s'agit du joueur 1 qui a pris les allumettes, on crée un Thread qui va animer les allumettes vers le bas
                     else:
-                        mover = ImageMover(i, dx = 0, dy = -1, repet = 50, sleepTime = 0.005)
-                    moveThreads.append(mover)
+                        mover = ImageMover(i, dx = 0, dy = -1, repet = 50, sleepTime = 0.005) #Sinon, on crée un thread qui va animer les allumettes vers le haut
+                    moveThreads.append(mover) #On ajoute le thread crée à la liste des threads chargés de l'animation
                 for j in moveThreads:
-                    j.start()
+                    j.start() #On démarre chacun des threads, quasi simultanément. Si la machine sur lequel le programme tourne a des problèmes de performance, les animations ne seront tout de fois pas correctement synchronisées
                 for k in moveThreads:
-                    k.join()
+                    k.join() #Une fois que les trois threads ont été lancés, on attend qu'ils se terminent avant de continuer l'exécution du programme
                 return 'done'
         except ValueError:
             return 'fail'
         
     def checkWin(self):
         if exitted:
-            return
-        gui.matchText = str(self.current_matches)
-        gui.matchLabel.configure(text = "Allumettes : " + str(gui.matchText))
-        if self.current_matches <= 0:
+            return #Si on a quitté l'interface, on quitte également cette fonction
+        gui.matchText = str(self.current_matches) #On met à jour le texte correspondant au nombre d'allumette
+        gui.matchLabel.configure(text = "Allumettes : " + str(gui.matchText)) # On met à jour l'affichage de ce nombre d'allumettes, en lui indiquant d'utiliser la nouvelle valeur de gui.matchText
+        if self.current_matches <= 0: #Si il ne reste plus aucune allumette, alors on regarde qui a joué en dernier
             if self.current_player in ('Player 2', 'AI'):
-                self.curPlayName = gui.P2Name
-                gui.P1Label.config(fg = "gray")
+                self.curPlayName = gui.P2Name #On met à jour le nom du joueur en cours
+                gui.P1Label.config(fg = "gray") #On grise le nom du perdant
             else:
-                self.curPlayName = gui.P1Name
-                gui.P2Label.config(fg = "gray")
-            writeToField(self.curPlayName + " remporte la partie !")
-            return 'win'
+                self.curPlayName = gui.P1Name #On met à jour le nom du joueur en cours
+                gui.P2Label.config(fg = "gray") #On grise le nom du perdant
+            writeToField(self.curPlayName + " remporte la partie !") #On affiche le nom du vainqueur
+            return 'win' #On retourne 'win', afin d'indiquer qu'il faut arrêter le jeu
         else:
-            return 'continue'
+            return 'continue' #On retourne 'continue', pour indiquer qu'il faut continuer le jeu
     
     def player(self, playNum = 1, turnNum = 1):
         def inputNumber():
             global playing, chosen
             valid = False
-            while not valid:
-                controller = gui
-                if playNum == 1:
+            while not valid:       
+                if playNum == 1: #Si le joueur en cours est le joueur 1
                     if self.current_matches >= 1:
-                        gui.button1.config(state = NORMAL)
+                        gui.button1.config(state = NORMAL) #Si il reste plus d'une allumette, on rend le bouton 1 du joueur 1 cliquable
                     if self.current_matches >= 2:
-                        gui.button2.config(state = NORMAL)
+                        gui.button2.config(state = NORMAL) #Si il reste plus de deux allumettes, on rend le bouton 2 du joueur 1 cliquable
                     if self.current_matches >= 3:
-                        gui.button3.config(state = NORMAL)
-                    buttonList = gui.matchButtons
-                    curFrame = gui.buttonFrame
-                else:
+                        gui.button3.config(state = NORMAL) #Si il reste plus de trois allumettes, on rend le bouton 3 du joueur 1 cliquable
+                    buttonList = gui.matchButtons #La liste des boutons que l'on devra désactiver à la fin du tour est la liste des boutons du joueur 1
+                else: #Si le joueur en cours est le joueur 2
                     if self.current_matches >= 1:
-                        gui.P2button1.config(state = NORMAL)
+                        gui.P2button1.config(state = NORMAL) #Si il reste plus d'une allumette, on rend le bouton 1 du joueur 2 cliquable
                     if self.current_matches >= 2:
-                        gui.P2button2.config(state = NORMAL)
+                        gui.P2button2.config(state = NORMAL) #Si il reste plus de deux allumettes, on rend le bouton 2 du joueur 2 cliquable
                     if self.current_matches >= 3:
-                        gui.P2button3.config(state = NORMAL)
+                        gui.P2button3.config(state = NORMAL) #Si il reste plus de deux allumettes, on rend le bouton 3 du joueur 2 cliquable
                         
-                    buttonList = gui.P2matchButtons
-                    curFrame = gui.P2buttonFrame
-                '''
-                if args[1] == 1 and turnNum > 1:
-                    for r in buttonList:
-                        r.pack()
-                '''
-                #controller.playing = True
+                    buttonList = gui.P2matchButtons #La liste des boutons que l'on devra désactiver à la fin du tour est la liste des boutons du joueur 2
+
                 playing = True
-                while True:
+                
+                while True: #Boucle infinie tant que l'on ne rencontre pas return ou break (puisque par 'while True' on sous entend 'while True = True', ce qui est toujours vrai, on aurait aussi pû écrire quelque chose comme 'while 1 + 1 == 2')
                     if exitted:
-                        return
-                    with lock:
-                        mustContinue = playing and (chosen == 0)  #(not controller.playing) or
+                        return #Si on a quitté l'interface, on quitte aussi cette fonction
+                    with lock: #Cette ligne indique que l'on verrouille les variables auquelles l'on accède dans ce bloc afin qu'un autre thread n'y accède pas en même temps
+                        mustContinue = playing and (chosen == 0)  #Si playing est True et que chosen est égal à 0 (= si l'on n'a pas encore choisi de nombre d'allumettes à retirer), mustContinue est True
                         if mustContinue:
-                            continue
+                            continue #Si l'on a pas encore fait de choix de nombre d'allumette, on continue la boucle (pendant ce temps, l'exécution du jeu ne se poursuit pas (contrairement à l'interface), ce qui permet d'attendre que l'on clique sur un des trois boutons
                         else:
-                            break
+                            break #Sinon, on sort de la boucle
                 if not exitted:
                     for i in buttonList:
-                        i.config(state = DISABLED)
+                        i.config(state = DISABLED) #On redésactive tous les boutons que l'on a activé précédemment (afin que l'on ne puisse pas les cliquer pendant le tour de l'autre joueur)
                 else:
                     return
-                chosenNum = int(chosen)
+                chosenNum = int(chosen) #chosenNum prend la valeur de la variable chosen, qui a été modifiée grâce à la fonction chooseNumber() appelée lors du clic sur un bouton. On utilise int() afin de s'assurer que chosenNum soit bien une copie de la valeur de la variable chosen (çad qu'on peut modifier l'une indépendamment de l'autre), et nom un 'raccourci' vers la variable chosen (çad que les modifications de l'une se répercutent sur l'autre)
                 if chosenNum != 0:
-                    valid = True
-                    break
-            chosen = 0    
-            return chosenNum
+                    valid = True 
+                    break #On quitte la boucle principale
+            chosen = 0 #On réinitialise la variable 'chosen'
+            return chosenNum #On retourne la valeur de chosenNum, qui correspond à la valeur du bouton que l'on a cliqué
         
         status = 'fail'
         while status != 'done':
             if exitted:
-                return
+                return #On quitte cette fonction si l'on a quitté l'interface
             else:
-                num = inputNumber()
-                status = self.takeMatches(num, playerNum = playNum)
+                num = inputNumber() #On utilise la fonction inputNumber() (définie quelques lignes plus haut) pour récupérer la valeur du bouton cliqué par le joueur.
+                status = self.takeMatches(num, playerNum = playNum) #On retire autant d'allumette que le joueur l'a indiqué
             
     
     class AIComponent:
         def __init__(self, owner):
             self.n = 0
-            self.owner = owner
+            self.owner = owner #Owner sert à renvoyer à l'instance de la classe gameHandler dont l'instance active de la classe AIComponent dépend
             
         def takeTurn(self):
             self.n = 0
-            n = self.n
-            mainClass = self.owner
-            matches_num = mainClass.current_matches
-            removeMatch = mainClass.takeMatches
+            n = self.n #Raccourci vers la variable self.n, afin d'éviter de devoir retaper self.n à chaque fois
+            mainClass = self.owner #Raccourci vers la variable self.owner
+            matches_num = mainClass.current_matches #Raccourci vers la variable current_class de l'instance actuellement active de la classe gameHandler
+            removeMatch = mainClass.takeMatches #Raccourci vers la méthode takeMatches de l'instance actuellement active de la classe gameHandler
             end = False
-            while not end:
+            while not end: #Tant que l'on a pas trouvé combien d'allumettes retirer, on continue à chercher, en incrémentant n à chaque fois
                 if exitted:
-                    return
-                if matches_num == 4*n:
-                    removeMatch(3, playerNum = 2)
-                    #writeToField('AI took 3 matches')
+                    return #On quitte cette fonction si l'on a quitté l'interface
+                #La stratégie gagnante consiste à - si l'autre joueur commence (comme c'est le cas ici) - toujours laisser à chaque tour (un multiple de 4) + 1 allumettes. L'autre joueur n'a alors strictement aucune chance de gagner, il sera toujours obligé de prendre la dernière allumette
+                if matches_num == 4*n: #Si le nombre d'allumettes est égal à un multiple de 4
+                    removeMatch(3, playerNum = 2) #On enlève 3 allumettes
+                    end = True #On a trouvé combien d'allumettes retirer, on indique donc qu'il faut quitter la boucle
+                elif matches_num == 4*n + 3: #Si le nombre d'allumettes est égal à (un multiple de 4) + 3
+                    removeMatch(2, playerNum = 2) #On enlève 2 allumettes
                     end = True
-                elif matches_num == 4*n + 3:
-                    removeMatch(2, playerNum = 2)
-                    #writeToField('AI took 2 matches')
+                elif matches_num == 4*n + 2: #Si le nombre d'allumettes est égal à (un multiple de 4) + 2
+                    removeMatch(1, playerNum = 2) #On retire une allumette
                     end = True
-                elif matches_num == 4*n + 2:
-                    removeMatch(1, playerNum = 2)
-                    #writeToField('AI took 1 match')
+                n += 1 #On incrémente la variable n
+                if not end and 4*n > matches_num: #Si l'on a pas trouvé combien d'allumettes retirer et que 4*n est plus élevé que le nombre d'allumettes restantes
+                    num = randint(1, 3) #On sélectionne un nombre aléatoire entre 1 et 3
+                    if matches_num - num < 0: #Si retirer ce nombre d'allumettes aboutirait à un nombre d'allumettes négatif
+                        num = matches_num #On choisit de retirer autant d'allumettes qu'il en reste
+                    removeMatch(num, playerNum = 2) #On retire le nombre choisi    
                     end = True
-                n += 1
-                if not end and 4*n > matches_num:
-                    num = randint(1, 3)
-                    if matches_num - num < 0:
-                        num = matches_num
-                    removeMatch(num, playerNum = 2)    
-                    end = True
-                    #writeToField('AI took ' + str(num) + ' match(es)')
+
                 
     
     def play(self, mode):
         if not mode in (0,1):
             raise ValueError("Mode number must be either 0 or 1")
-        gui.base.title("Ryuga no Allumette")
-        if not mode:
-            self.AI = self.AIComponent(self)
-            AI = self.AI.takeTurn
-        player = self.player
+        gui.base.title("Ryuga no Allumette") #On met à jour le titre de la fenêtre
+        if not mode: #Equivalent à if mode == 0
+            self.AI = self.AIComponent(self) #On crée une instance de la classe AIComponent, et on l'assinge à la variable AI de l'instance active de la classe gameHandler
+            AI = self.AI.takeTurn # On raccourcit la méthode takeTurn de l'instance de la classe AI crée plus tôt en AI
+        player = self.player #On raccourcit self.player en player
         turnNum = 0
-        while not self.checkWin() == 'win' and not exitted:
+        while not self.checkWin() == 'win' and not exitted: #Tant que un joueur n'a pas gagné ou que l'on n'a pas quitté l'interface, on exécute le bloc en dessous
             if self.current_player in ('Player 2', 'AI'):
                 writeToField("Tour de " + gui.P2Name)
-                self.curPlayName = gui.P2Name
+                self.curPlayName = gui.P2Name #On met à jour le nom réel du joueur dont c'est le tour
             else:
                 writeToField("Tour de " + gui.P1Name)
-                self.curPlayName = gui.P1Name
-            #writeToField('Current matches : ' + str(self.current_matches))
+                self.curPlayName = gui.P1Name #On met à jour le nom réel du joueur dont c'est le tour
             if not mode:
                 if self.current_player == 'Player 1':
                     player(turnNum = turnNum)
