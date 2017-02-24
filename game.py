@@ -11,14 +11,6 @@ playing = False
 exitted = False
 chosen = 0
 lock = threading.RLock()
-#P1matches = 0
-#P2matches = 0
-"""
-class Controller:
-    def __init__(self):
-        self.playing = False
-        self.chosen = None
-"""        
 
 def chooseNumber(number):
         global playing, chosen
@@ -27,11 +19,21 @@ def chooseNumber(number):
             playing = False   
 
 
-# controller = Controller()
 
 class GUI(threading.Thread):
+    '''
+    Classe permettant de créer l'interface graphique. Elle hérite de la classe Thread, car pour que l'interface s'exécute en même temps que le code relatif au jeu, il faut placer le code relatif à l'interface dans un thread s'exécutant en parallèle et communiquant avec le jeu
+    '''
     def __init__(self, attachTo = None, mode = 0):
-        threading.Thread.__init__(self)
+        '''
+        Méthode appelée lors de la création d'une instance de la classe GUI (on crée une instance en tapant "foo = GUI()", où foo est le nom de l'instance de la classe
+        @type attachTo: Toplevel
+        @param attachTo: La fenêtre à laquelle l'interface va s'attacher. Si cette variable est None, on crée une fenêtre à la place.
+        
+        @type mode: int
+        @param mode: Le mode de jeu. Si cette variable est égale à 0, l'interface ne créera pas les contrôles du joueur 2 (puisque le mode 0 correspon au mode joueur contre IA)
+        '''
+        threading.Thread.__init__(self) #Création d'une instance de la classe Thread
         self.textField = None
         self.chosen = None
         self.playing = False
@@ -40,7 +42,7 @@ class GUI(threading.Thread):
         self.P1Avatar = "loading_avatar_big.png"
         self.P2Avatar = "loading_avatar_big.png"
         self.matchText = "NaN"
-        self.matchesImages = []
+        self.matchesImages = [] #Liste contenant les images des allumettes, de sorte à ce qu'on puisse les manipuler en dehors de la classe GUI
         self._stop = threading.Event()
         self.mode = mode
         self.attachTo = attachTo
@@ -49,24 +51,24 @@ class GUI(threading.Thread):
     def stop(self):
         global exitted
         self._stop.set()
-        exitted = True
+        exitted = True #On fait en sorte que la variable globale exitted soit égale à True, afin que le code relatif au jeu se quitte lui aussi en même temps que le GUI.
     
     def stopped(self):
         return self._stop.isSet()
     
     def exit(self):
-        self.stop()
+        self.stop() #On envoie une requête d'arrêt au Thread du GUI
         while not self.stopped():
-            continue
-        self.attachTo.destroy()
-        del self
+            continue #On attend que le Thread s'arrêté (on ne peut utiliser la méthode join() qu'en dehors du Thread)
+        self.attachTo.destroy() #On supprime la fenêtre contenant l'interface
+        del self #On supprime l'instance de la classe GUI, afin de ne pas utiliser inutilement de la mémoire
 
     def run(self):
 ##############Creation de la fenêtre principale##############
         if self.attachTo is None:
-            self.base = Tk()
+            self.base = Tk() #Si aucune fenêtre principale n'a été crée, on en crée une
         else:
-            self.base = self.attachTo
+            self.base = self.attachTo #Sinon, on execute la création de l'interface dans la fenêtre TopLevel spécifiée en argument lors de la création de l'instance de la classe (on ne peut avoir qu'une seule fenêtre Tk() par application)
         screenWidth = self.base.winfo_screenwidth()
         screenHeight = self.base.winfo_screenheight()
         startX = screenWidth // 2 - (1280 // 2)
@@ -152,19 +154,23 @@ class GUI(threading.Thread):
             self.P2matchButtons = None
 #############################################################
 
-
+##############Ajout des volets horizontaux au volet central##############
         self.subWindow.add(self.subFrame1)
         self.subWindow.add(self.subFrame2)
         self.subWindow.add(self.subFrame3)
         self.subWindow.pack()
-                
+#########################################################################
+
+##############Division du volet de droite en volets verticaux##############                
         self.rWindow = PanedWindow(self.frame3, orient = VERTICAL)
         self.rWindow.pack(side = TOP, expand = Y, fill = BOTH) # On fait en sorte que la PanedWindow remplisse l'intégralité du volet de droite
         self.rFrame1 = Frame(self.rWindow, width = 340, height = 150) #Création des volets
         self.rFrame2 = Frame(self.rWindow, width = 340, height = 500) #Création des volets
-        self.rFrame2.pack_propagate(0)
+        self.rFrame2.pack_propagate(0) #On fait en sorte que le volet 2 ne rétrécisse pas pour s'adapter à la taille des éléments qu'il contient
         self.rFrame3 = Frame(self.rWindow, width = 340, height = 110) #Création des volets
-        
+###########################################################################
+
+##############Placement des noms et avatars des joueurs##############        
         self.P2Canvas= Canvas(self.rFrame1, width = 80, height = 80, relief = GROOVE)
         self.P2File = PhotoImage(file = os.path.join(imageDir, self.P2Avatar))
         self.P2Image = self.P2Canvas.create_image(0, 0, anchor = NW, image = self.P2File)
@@ -178,26 +184,33 @@ class GUI(threading.Thread):
         self.P1Label = Label(self.rFrame3, text = self.P1Name, relief = RIDGE, justify = CENTER, fg = 'gray', bg = 'white')
         self.P1Canvas.grid(row = 0, column = 1, rowspan = 5, columnspan = 2)
         self.P1Label.grid(row = 2, column = 4, columnspan = 3)
-        
+######################################################################
+
+##############Remplissage du volet central du volet de droite##############
         self.matchLabel = Label(self.rFrame2, text = 'Allumettes : ' + str(self.matchText), bg = "white", relief = RIDGE)
         self.matchLabel.place(anchor = CENTER, relx = 0.50, rely = 0.47)
         self.quitButton = Button(self.rFrame2, text = 'Quitter', command = self.exit)
         self.quitButton.place(anchor = CENTER, relx = 0.50, rely = 0.53)
-        
+###########################################################################
+
+##############Ajout des volets au volet de droite##############
         self.rWindow.add(self.rFrame1)
         self.rWindow.add(self.rFrame2)
         self.rWindow.add(self.rFrame3)
         self.rWindow.pack()
+###############################################################
         
-        
-        self.base.protocol("WM_DELETE_WINDOW", self.exit)
+        self.base.protocol("WM_DELETE_WINDOW", self.exit) #On remplace la commande exécutée lorsque l'on clique sur la croix par notre propre commande d'arrêt, afin d'éviter que les Threads ne poursuivent leur exécution en arrière plan après la fermeture de la fenêtre
         if self.attachTo is None:
             self.base.mainloop()
             
 
-gui = GUI()
+gui = GUI() #On crée une instance de la classe GUI. Elle ne reçoit aucun argument, et ne sert à rien (car on la recrée plus tard), sauf à faire en sorte que Python ne renvoie pas d'erreur en lisant les fonctions ci-dessous (qui font référence à l'instance gui de la classe GUI)
 
 def writeToField(message):
+    '''
+    Permet d'écrire un message dans la zone de texte à gauche de l'interface
+    '''
     convMessage = message + '\n'
     gui.textField.config(state = NORMAL)
     gui.textField.insert('end', convMessage)

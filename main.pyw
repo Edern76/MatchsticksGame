@@ -26,24 +26,33 @@ logoFrame.grid(row = 0, column = 0, sticky = NW, columnspan = 3) #On place la fr
 ###########################################
 
 class SingleplayerStarter(threading.Thread):
+    '''
+    Permet de lancer le mode joueur contre IA. On utilise un thread car sinon la fenêtre ne s'affiche pas
+    '''
     def __init__(self):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self) #Initialisation de la classe Thread dont la classe SingleplayerStarter hérite
         self._stop = threading.Event()
         
     def stop(self):
         self._stop.set()
         
     def run(self):
-        fenetreNom = Toplevel(root)
-        nomRetourne = name.askSimpleName(fenetreNom, root)
-        if nomRetourne is not None:
-            fenetreJeu = Toplevel(root)
-            game.main(0, fenetreJeu, nomRetourne)
-        else:
-            pass
-        self.stop()
+        '''
+        Remplace la méthode run héritée de la classe Thread, et est appelée lorsque l'on appelle la méthode start.
+        '''
+        fenetreNom = Toplevel(root) #On crée une autre fenêtre, destinée à demander le nom du joueur. On ne doit en effet SURTOUT PAS appeler Tk() ou mainloop() plus d'une fois par application
+        nomRetourne = name.askSimpleName(fenetreNom, root) #On demande le nom du joueur
+        if nomRetourne is not None: #Si l'utilisateur a cliqué sur OK
+            fenetreJeu = Toplevel(root) #On crée une nouvelle fenêtre, accueillant le jeu en lui même.
+            game.main(0, fenetreJeu, nomRetourne) #On démarre le jeu en mode 1 joueur, en indiquant qu'il faut qu'il s'attache à la fenêtre précédemment crée et en lui indiquant le nom du joueur
+        else: #Si l'utilisateur a cliqué sur Annuler
+            pass #On n'effectue aucune action, on revient donc au menu principal
+        self.stop() #On arrête le thread
 
 class MultiplayerStarter(threading.Thread):
+    '''
+    Idem que pour singleplayer starter, mais en mode Joueur contre joueur
+    '''
     def __init__(self):
         threading.Thread.__init__(self)
         self._stop = threading.Event()
@@ -63,10 +72,17 @@ class MultiplayerStarter(threading.Thread):
         self.stop()
         
 def startSolo():
+    '''
+    Plutôt que de créer une instance de SinglePlayer à la racine du programme et de la lancer directement en cliquant sur un bouton, on associe ces deux actions à une fonction.
+    Cela permet de créer un nouveau Thread à chaque clic sur le bouton, (un Thread ne peut être lancé qu'une seule fois), et donc de pouvoir jouer plusieurs fois sans avoir à relancer le programme entre temps.
+    '''
     solo = SingleplayerStarter()
-    solo.start()
+    solo.start() #On appelle la méthode start de l'instance 'solo' de la classe 'SingleplayerStarter', héritée de la classe Thread, qui elle même appelle la méthode run (on exécute donc le code contenu dans la méthode run)
     
 def startMulti():
+    '''
+    Idem que pour startSolo
+    '''
     multi = MultiplayerStarter()
     multi.start()   
 ############Création du menu###############
