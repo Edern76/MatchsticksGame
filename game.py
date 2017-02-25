@@ -23,6 +23,7 @@ def chooseNumber(number):
 class GUI(threading.Thread):
     '''
     Classe permettant de créer l'interface graphique. Elle hérite de la classe Thread, car pour que l'interface s'exécute en même temps que le code relatif au jeu, il faut placer le code relatif à l'interface dans un thread s'exécutant en parallèle et communiquant avec le jeu
+    GUI est l'acronyme anglais pour Graphical User Interface, c'est à dire Interface Utilisateur Graphique. Il s'agit de l'élément au travers duquel l'utilisateur va interagir avec le programme
     '''
     def __init__(self, attachTo = None, mode = 0):
         '''
@@ -31,17 +32,19 @@ class GUI(threading.Thread):
         @param attachTo: La fenêtre à laquelle l'interface va s'attacher. Si cette variable est None, on crée une fenêtre à la place.
         
         @type mode: int
-        @param mode: Le mode de jeu. Si cette variable est égale à 0, l'interface ne créera pas les contrôles du joueur 2 (puisque le mode 0 correspon au mode joueur contre IA)
+        @param mode: Le mode de jeu. Si cette variable est égale à 0, l'interface ne créera pas les contrôles du joueur 2 (puisque le mode 0 correspond au mode joueur contre IA)
         '''
         threading.Thread.__init__(self) #Création d'une instance de la classe Thread
         self.textField = None
         self.chosen = None
         self.playing = False
+        ##############Valeurs temporaires affichées uniquement durant le chargement##############
         self.P1Name = "Loading..."
         self.P2Name = "Loading..."
         self.P1Avatar = "loading_avatar_big.png"
         self.P2Avatar = "loading_avatar_big.png"
         self.matchText = "NaN"
+        ##############################################################################
         self.matchesImages = [] #Liste contenant les images des allumettes, de sorte à ce qu'on puisse les manipuler en dehors de la classe GUI
         self._stop = threading.Event()
         self.mode = mode
@@ -67,6 +70,9 @@ class GUI(threading.Thread):
 ##############Creation de la fenêtre principale##############
         if self.attachTo is None:
             self.base = Tk() #Si aucune fenêtre principale n'a été crée, on en crée une
+            #En soi, cette ligne n'est actuellement jamais utilisée, car si le programme est lancé directement à partir de game.py, il affiche un message d'erreur, car on souhaite que l'utilisateur passe par le menu principal, afin qu'on lui demande son nom et qu'il puisse choisir son mode de jeu.
+            #Il s'agit donc d'un artefact de développement (car les versions antérieures étaient lancées en appellant la fonction os.system(), qui simulait une commande shell, il fallait donc que game.py soit exécutable indépendamment. Cela permettait également de tester rapidement le programme sans avoir à repasser par le menu principal à chaque fois.
+            #Néanmoins, il est très facile de restaurer cette fonctionnalité, en remplacant le bloc de code contenu sous if __name__ == '__main__' par un appel de la fonction main(), avec les arguments adéquats.
         else:
             self.base = self.attachTo #Sinon, on execute la création de l'interface dans la fenêtre TopLevel spécifiée en argument lors de la création de l'instance de la classe (on ne peut avoir qu'une seule fenêtre Tk() par application)
         screenWidth = self.base.winfo_screenwidth()
@@ -187,9 +193,9 @@ class GUI(threading.Thread):
 ######################################################################
 
 ##############Remplissage du volet central du volet de droite##############
-        self.matchLabel = Label(self.rFrame2, text = 'Allumettes : ' + str(self.matchText), bg = "white", relief = RIDGE)
+        self.matchLabel = Label(self.rFrame2, text = 'Allumettes : ' + str(self.matchText), bg = "white", relief = RIDGE) #Texte affichant combien d'allumettes il reste
         self.matchLabel.place(anchor = CENTER, relx = 0.50, rely = 0.47)
-        self.quitButton = Button(self.rFrame2, text = 'Quitter', command = self.exit)
+        self.quitButton = Button(self.rFrame2, text = 'Quitter', command = self.exit) #Bouton permettant de quitter le programme. A surtout une valeur décorative, puisque cliquer sur la croix rouge a exactement le même effet (voir ci-dessous)
         self.quitButton.place(anchor = CENTER, relx = 0.50, rely = 0.53)
 ###########################################################################
 
@@ -202,7 +208,7 @@ class GUI(threading.Thread):
         
         self.base.protocol("WM_DELETE_WINDOW", self.exit) #On remplace la commande exécutée lorsque l'on clique sur la croix par notre propre commande d'arrêt, afin d'éviter que les Threads ne poursuivent leur exécution en arrière plan après la fermeture de la fenêtre
         if self.attachTo is None:
-            self.base.mainloop()
+            self.base.mainloop() #Si on a du créer une fenêtre Tk(), alors on appelle sa méthode mainloop().
             
 
 gui = GUI() #On crée une instance de la classe GUI. Elle ne reçoit aucun argument, et ne sert à rien (car on la recrée plus tard), sauf à faire en sorte que Python ne renvoie pas d'erreur en lisant les fonctions ci-dessous (qui font référence à l'instance gui de la classe GUI)
@@ -310,7 +316,13 @@ class GameHandler:
             return 'continue' #On retourne 'continue', pour indiquer qu'il faut continuer le jeu
     
     def player(self, playNum = 1, turnNum = 1):
+        '''
+        Fonction permettant d'effectuer le tour d'un joueur
+        '''
         def inputNumber():
+            '''
+            Fonction permettant d'attendre que le joueur clique sur un bouton, et de retourner la valeur choisie
+            '''
             global playing, chosen
             valid = False
             while not valid:       
@@ -415,20 +427,20 @@ class GameHandler:
             else:
                 writeToField("Tour de " + gui.P1Name)
                 self.curPlayName = gui.P1Name #On met à jour le nom réel du joueur dont c'est le tour
-            if not mode:
+            if not mode: #Si on est en mode joueur contre IA
                 if self.current_player == 'Player 1':
-                    player(turnNum = turnNum)
-                    self.current_player = 'AI'
+                    player(turnNum = turnNum) #On appelle la fonction permettant d'effectuer le tour du joueur 1
+                    self.current_player = 'AI' #On indique que c'est le tour de l'IA
                 else:
-                    AI()
-                    self.current_player = 'Player 1'
+                    AI() #On effectue le tour de l'IA
+                    self.current_player = 'Player 1' #On indique que c'est au tour du joueur 1
             else:
-                if self.current_player == "Player 1":
-                    player(turnNum = turnNum)
-                    self.current_player = 'Player 2'
+                if self.current_player == "Player 1": 
+                    player(turnNum = turnNum) #On effectue le tour du joueur 1
+                    self.current_player = 'Player 2' #On indique que c'est au tour du joueur 2
                 else:
-                    player(2, turnNum = turnNum)
-                    self.current_player = 'Player 1'
+                    player(2, turnNum = turnNum) #On effectue le tour du joueur 2
+                    self.current_player = 'Player 1' #On indique que c'est au tour du joueur 1
             turnNum += 1
 
 
@@ -436,27 +448,28 @@ class GameHandler:
 def main(mode = 3, attachTo = None, name1 = None, name2 = None):
     global gui, exitted
     exitted = False
-    game = GameHandler()
-    gui = GUI(attachTo, mode)
-    gui.start()
-    time.sleep(4)
+    game = GameHandler() #On crée une instance de gameHandler nommée game, qui va gérer la logique du jeu
+    gui = GUI(attachTo, mode) #On remplace l'instance temporaire de GUI par une autre instance, prenant cette fois en compte les arguments que l'on a passé à la fonction main (la fenêtre à laquelle s'attacher si il y en a une et le mode de jeu)
+    gui.start() #On démarre le thread de l'interface
+    time.sleep(4) #On attend quatre secondes avant de poursuivre l'exécution. En effet, si le programme se poursuit alors que l'interface n'a pas fini de charger, cela va provoquer énormément d'erreurs
     global matches_num
-    matches_num = game.current_matches
-    if mode == 0:
-        gui.P2Name = "R0B0T0"
-        gui.P2Avatar = "AI_avatar_big.png"
-        gui.P1Name = str(name1)
-    else:
-        gui.P2Name = str(name2)
-        gui.P2Avatar = "P2_avatar.png"
-        gui.P1Name = str(name1)
-    gui.P1Avatar = "P1_avatar.png"
-    gui.P2Label.config(text = gui.P2Name, fg = "red")
-    gui.P1Label.config(text = gui.P1Name, fg = "blue")
-    gui.P1File.configure(file = os.path.join(imageDir, gui.P1Avatar))
-    gui.P2File.configure(file = os.path.join(imageDir, gui.P2Avatar))
-    game.play(mode)
+    matches_num = game.current_matches #On fait en sorte que la variable globale matches_num soit un raccourci vers la variable current_matches de game
+    if mode == 0: #Si on est en mode joueur contre IA
+        gui.P2Name = "R0B0T0" #Le nom du "Joueur" 2 devient "R0B0T0" (au lieu de "Loading..."), qui est le nom de notre IA
+        gui.P2Avatar = "AI_avatar_big.png" #L'avatar du "Joueur" 2 devient l'avatar de l'IA
+    else: #Si l'on est en mode joueur contre joueur
+        gui.P2Name = str(name2) #Le nom du joueur 2 devient le nom que l'on a spécifié préalablement
+        gui.P2Avatar = "P2_avatar.png" #On assigne au joueur 2 son avatar
+        
+    gui.P1Name = str(name1) #Le nom du joueur 1 devient le nom que l'on a spécifié préalablement
+    gui.P1Avatar = "P1_avatar.png" #On assigne au joueur 1 son avatar
+    gui.P2Label.config(text = gui.P2Name, fg = "red") #On indique à l'interface de charger la nouvelle valeur du nom du "joueur" 2 (qu'il soit humain ou IA, la distinction s'effectue plus haut) et de l'afficher en rouge dans le label correspondant
+    gui.P1Label.config(text = gui.P1Name, fg = "blue") #On indique à l'interface de charger la nouvelle valeur du nom du joueur 1 et de l'afficher en bleu dans le label correspondant.
+    #NB : Les méthodes config et configure ont exactement le même fonctionnement
+    gui.P1File.configure(file = os.path.join(imageDir, gui.P1Avatar)) #On indique à l'interface de charger le nouvel avatar du joueur 1
+    gui.P2File.configure(file = os.path.join(imageDir, gui.P2Avatar)) #On indique à l'interface de charger le nouvel avatar du "joueur" 2
+    game.play(mode) #Enfin, on démarre le jeu
 
-if __name__ == "__main__":
+if __name__ == "__main__": #Si l'on exécute directement game.py
     from tkinter.messagebox import *
-    showerror('Erreur', 'Veuillez lancer main.pyw pour démarrer le programme')
+    showerror('Erreur', 'Veuillez lancer main.pyw pour démarrer le programme') #On affiche un message d'erreur.
