@@ -10,26 +10,41 @@ matches_num = 21
 playing = False
 exitted = False
 chosen = 0
-lock = threading.RLock()
+lock = threading.RLock() #On crée un 'verrou', qui va permettre d'empêcher des variables d'être modifiées par deux Threads en même temps
 
 def chooseNumber(number):
-        global playing, chosen
-        with lock:
-            chosen = number
-            playing = False   
+    '''
+    Voir description de la classe GUI pour des explications sur les Threads.
+    
+    Si l'on associait directement la fonction takeMatches() (qui permet de prendre des allumettes) aux boutons de l'interface, on aurait alors eu aucun moyen de stopper l'exécution du programme tant que l'on a pas cliqué sur un bouton.
+    En d'autres termes, l'IA aurait pris des allumettes en boucle, et pour pouvoir jouer il aurait fallu appuyer sur les boutons pile poil au bon moment, entre deux tours de l'IA. C'est à dire, le jeu aurait été en temps réel, or on le veut en tour par tour.
+    
+    L'unique moyen de contourner ce problème que nous avons trouvé est d'appeler la fonction chooseNumber au lieu de takeMatches() directement lors du clic sur un bouton.
+    Cette fonction va modifier deux variables globales : la première (chosen) est le nombre d'allumettes que nous souhaitons prendre (la valeur du bouton) tandis que la seconde (playing) est une variable booléene qui va indiquer que nous avons bien effectué une sélection (cliqué sur un bouton)
+    Dans la fonction qui gère le tour d'un joueur humain (méthode player() de la classe GameHandler, voir ci dessous), on va alors faire une boucle infinie au moment où on veut que le joueur fasse une sélection.
+    Tant que la variable playing est False, on reste dans cette boucle. Lorsque elle devient True, on quitte la boucle et on continue l'exécution de la fonction du tour du joueur, qui va récupérer la valeur de la variable chosen, et appeler la fonction takeMatches() avec cette dernière valeur comme argument.
+    '''
+    global playing, chosen
+    with lock: #On 'verouille' les variables auxquelles on accède, afin qu'un autre Thread n'y accède pas en même temps que cette fonction, ce qui provoquerait des conflits
+        chosen = number
+        playing = False   
 
 
 
 class GUI(threading.Thread):
     '''
-    Classe permettant de créer l'interface graphique. Elle hérite de la classe Thread, car pour que l'interface s'exécute en même temps que le code relatif au jeu, il faut placer le code relatif à l'interface dans un thread s'exécutant en parallèle et communiquant avec le jeu
+    Classe permettant de créer l'interface graphique. Elle hérite de la classe Thread, car pour que l'interface s'exécute en même temps que le code relatif au jeu, il faut placer le code relatif à l'interface dans un thread s'exécutant en parallèle et communiquant avec le jeu.
+    En effet, on ne peut de base exécuter de code en même temps que Tkinter que lors du clic sur un bouton. Si on n'avait pas utilisé de Thread, il aurait donc fallu mettre toute la logique du jeu dans la fonction appelée lors du clic sur le bouton (takeMatches() à l'origine, chooseNumber() n'est utile que si on utilise un thread).
+    Or, pour moi la fonction takeMatches() était un simple remplacement du 'matches_num -= num' de la version du jeu tournant dans un terminal écrite par Erwan, auquel on rajouterait l'animation des allumettes en temps voulu, il fallait donc que cela reste une fonction simple, qui ne fasse que ce que son nom indique qu'elle fait : à savoir prendre des allumettes. Sinon, cela aurait pu rendre encore plus complexe la compréhension du code (car si les fonctions ne font pas ce que leur nom indiquent qu'elles font, la lecture peut rapidement devenir très difficile)
+    C'est pourquoi j'ai choisi d'utiliser un Thread, car en soit le concept n'est pas particulièrement ardu (son exécution l'est un peu plus, car en effet faire communiquer un Thread avec le reste du programme a été un vrai défi), et cela m'a permis de découvrir également une nouvelle technique de programmation, que nous pourrons ainsi éventuellement réinvestir dans d'autres projets, comme notre projet final.
+    
     GUI est l'acronyme anglais pour Graphical User Interface, c'est à dire Interface Utilisateur Graphique. Il s'agit de l'élément au travers duquel l'utilisateur va interagir avec le programme
     '''
     def __init__(self, attachTo = None, mode = 0):
         '''
         Méthode appelée lors de la création d'une instance de la classe GUI (on crée une instance en tapant "foo = GUI()", où foo est le nom de l'instance de la classe
         @type attachTo: Toplevel
-        @param attachTo: La fenêtre à laquelle l'interface va s'attacher. Si cette variable est None, on crée une fenêtre à la place.
+        @param attachTo: La fenêtre à laquelle l'interface va s'attacher. Si cette variable est None, on suppose qu'il n'existe aucune fenêtre principale et on crée donc cette fenêtre à la place.
         
         @type mode: int
         @param mode: Le mode de jeu. Si cette variable est égale à 0, l'interface ne créera pas les contrôles du joueur 2 (puisque le mode 0 correspond au mode joueur contre IA)
@@ -53,7 +68,7 @@ class GUI(threading.Thread):
         
     def stop(self):
         global exitted
-        self._stop.set()
+        self._stop.set() #On envoie un signal d'arrêt au Thread en cours
         exitted = True #On fait en sorte que la variable globale exitted soit égale à True, afin que le code relatif au jeu se quitte lui aussi en même temps que le GUI.
     
     def stopped(self):
@@ -79,8 +94,8 @@ class GUI(threading.Thread):
         screenHeight = self.base.winfo_screenheight()
         startX = screenWidth // 2 - (1280 // 2)
         startY = ((screenHeight // 2) - (720 // 2)) - 40
-        self.base.geometry('1280x720+{}+{}'.format(startX, startY))
-        self.base.title("Loading...")
+        self.base.geometry('1280x720+{}+{}'.format(startX, startY)) #Réglage de la résolution et de la position de la fenêtre
+        self.base.title("Loading...") #Titre temporaire utilisé durant le chargement
 #############################################################
 
 ##############Division de la fenêtre en trois parties verticales##############
